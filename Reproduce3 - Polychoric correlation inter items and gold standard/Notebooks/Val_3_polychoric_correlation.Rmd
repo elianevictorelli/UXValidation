@@ -84,38 +84,84 @@ in the resulting matrix points the same "more positive" direction and signs are 
 comparable across the whole matrix (matches the reverse-coding already applied to the SUS
 composite in the Pearson notebook).
 
-```{r hetcor, cache=TRUE}
+```{r hetcor}
 reverse_items <- c("SUS_2", "SUS_4", "SUS_6", "SUS_8", "SUS_10")
 
 item_df <- df[, all_items]
-for (col in reverse_items) {
-  item_df[[col]] <- 6 - item_df[[col]]  # 1-5 Likert: flip negatively-worded SUS items
-}
-item_df[] <- lapply(item_df, ordered)
+#for (col in reverse_items) {
+#  item_df[[col]] <- 6 - item_df[[col]]  # 1-5 Likert: flip negatively-worded SUS items
+#}
+#item_df[] <- lapply(item_df, ordered)
 
-het <- hetcor(item_df, use = "pairwise.complete.obs", std.err = FALSE, ML = FALSE)
+
+
+for (col in reverse_items) {
+  item_df[[col]] <- 6 - as.numeric(item_df[[col]])
+}
+
+# Converte todas as colunas para ordered sem usar item_df[] <-
+item_df <- as.data.frame(lapply(item_df, ordered))
+
+#het <- hetcor(item_df, use = "pairwise.complete.obs", std.err = FALSE, ML = FALSE)
+
+het <- polycor::hetcor(item_df, use = "pairwise.complete.obs", std.err = FALSE, ML = FALSE)
+  
+  
+  
+  
+
+
 ```
 
 ```{r extract}
-r_mat <- het$correlations[all_items, all_items]  # enforce construct-block order
-n_mat <- het$n[all_items, all_items]
+#r_mat <- het$correlations[all_items, all_items]  # enforce construct-block order
+#n_mat <- het$n[all_items, all_items]
 
+# Compute the correct pairwise sample size matrix (N)
+#valid_data <- !is.na(item_df[, all_items])
+#n_mat <- t(valid_data) %*% valid_data
+#dimnames(n_mat) <- dimnames(r_mat)
+
+
+#t_mat <- r_mat * sqrt(n_mat - 2) / sqrt(1 - r_mat^2)
+
+
+#p_raw <- 2 * pt(-abs(t_mat), df = n_mat - 2)
+#p_mat <- matrix(p_raw, nrow = nrow(r_mat), ncol = ncol(r_mat), dimnames = dimnames(r_mat))
+#diag(p_mat) <- NA  # self-correlation (r = 1) makes t = Inf/NaN; not a meaningful p-value anyway
+
+#groups_vec <- item_to_group$group[match(colnames(r_mat), item_to_group$item)]
+
+
+#axis_text_element <- function(colors, angle = 0, hjust = 0.5, vjust = 0.5) {
+#  element_text(angle = angle, hjust = hjust, vjust = vjust, colour = colors, face = "bold")
+#}
+
+
+r_mat <- het$correlations[all_items, all_items]  # enforce construct-block order
+
+# Compute the correct pairwise sample size matrix (N)
+valid_data <- as.matrix(!is.na(item_df[, all_items])) * 1
+n_mat <- t(valid_data) %*% valid_data
+dimnames(n_mat) <- dimnames(r_mat)
+
+# Approximated t-test and p-values
 t_mat <- r_mat * sqrt(n_mat - 2) / sqrt(1 - r_mat^2)
 p_raw <- 2 * pt(-abs(t_mat), df = n_mat - 2)
 p_mat <- matrix(p_raw, nrow = nrow(r_mat), ncol = ncol(r_mat), dimnames = dimnames(r_mat))
-diag(p_mat) <- NA  # self-correlation (r = 1) makes t = Inf/NaN; not a meaningful p-value anyway
+diag(p_mat) <- NA
 
 groups_vec <- item_to_group$group[match(colnames(r_mat), item_to_group$item)]
 
-# Per-label axis colouring: a vector passed to element_text(colour = ...) — triggers a
-# harmless "Vectorized input to element_text() is not officially supported" warning, but
-# renders correctly and reliably. ggtext::element_markdown() was tried as the "supported"
-# alternative but proved unstable in practice (intermittent literal "<span>" text, and a
-# real "no applicable method for 'depth'" gridtext error on repeat runs) — not worth
-# chasing for a cosmetic detail, so this sticks with the plain, working approach.
+# Theme helper for axis labels
 axis_text_element <- function(colors, angle = 0, hjust = 0.5, vjust = 0.5) {
-  element_text(angle = angle, hjust = hjust, vjust = vjust, colour = colors, face = "bold")
+  ggplot2::element_text(angle = angle, hjust = hjust, vjust = vjust, colour = colors, face = "bold")
 }
+
+
+
+
+
 ```
 
 ## Results — long table
