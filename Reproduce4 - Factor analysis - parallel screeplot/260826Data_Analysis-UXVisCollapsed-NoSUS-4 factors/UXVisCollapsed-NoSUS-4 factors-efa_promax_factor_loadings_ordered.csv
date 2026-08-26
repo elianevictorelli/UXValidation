@@ -1,0 +1,14 @@
+,,Item,Primary_Factor,Max_Loading,MR2,MR4,MR1,MR3,Communality_h2,Uniqueness_u2,Complexity
+Visualization,P089 The visual representations I saw were simple to understand,P089,MR1,0.596,0.153,0.036,0.596,0.059,0.555,0.445,1.16
+Visualization,P022A I can easily remember how to read the visualizations in the system,P022A,MR1,0.568,0.176,0.127,0.568,-0.106,0.52,0.48,1.38
+Visualization,P067.I.could.safely.engage.in.a.trial.and.error.analysis.processï,P067,MR1,0.533,0.009,-0.053,0.533,0.257,0.426,0.574,1.47
+Visualization,P097 Using the system I could easily retrieve information from my data,P097,MR1,0.429,-0.105,0.317,0.429,0.18,0.516,0.484,2.39
+Intuitiveness,P088 I found the system simple to understand,P088,MR2,0.911,0.911,0.078,-0.031,-0.016,0.853,0.147,1.02
+Intuitiveness,P026 I found it easy to get started using this system,P026,MR2,0.826,0.826,-0.117,0.157,-0.001,0.755,0.245,1.11
+Intuitiveness,P4026A Getting the tool configured for my analysis was straightforward,P4026A,MR2,0.677,0.677,-0.017,0.093,0.085,0.587,0.413,1.07
+CognitiveV,P060 I enjoyed using this system,P060,MR3,0.788,0.246,0.017,-0.084,0.788,0.8,0.2,1.22
+CognitiveV,P064 The tool encouraged me to think deeply about my data,P064,MR3,0.647,-0.13,-0.052,0.306,0.647,0.531,0.469,1.53
+CognitiveV,P301 The system was useful for me,P301,MR4,0.824,-0.058,0.824,-0.246,0.341,0.767,0.233,1.54
+Visualization,P106 The visualizations I saw seemed to represent the data faithfully,P106,MR4,0.709,0.02,0.709,0.265,-0.327,0.626,0.374,1.72
+Visualization,P098 I found the visual representations provided by the system were appropriate,P098,MR4,0.577,-0.097,0.577,0.281,0.001,0.54,0.46,1.52
+CognitiveV,P027 I could complete my essential tasks efficiently,P027,MR4,0.516,0.217,0.516,-0.003,0.17,0.558,0.442,1.58

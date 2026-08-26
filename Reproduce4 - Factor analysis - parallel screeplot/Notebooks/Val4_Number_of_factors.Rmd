@@ -129,7 +129,7 @@ cat("Number of factors suggested by Parallel Analysis:", fa_parallel$nfact, "\n"
 ```
 
 ```{r efa}
-k_factors <- 3
+k_factors <- 4
 
 efa_model <- fa(
   r = r_mat,
@@ -146,7 +146,7 @@ print(efa_model$loadings, cutoff = 0.30, sort = TRUE)
 # Test Promax rotation and check factor complexity
 efa_promax <- fa(
   r = r_mat,
-  nfactors = 3,
+  nfactors = 4,
   n.obs = n_sample,
   rotate = "promax",
   fm = "minres"
