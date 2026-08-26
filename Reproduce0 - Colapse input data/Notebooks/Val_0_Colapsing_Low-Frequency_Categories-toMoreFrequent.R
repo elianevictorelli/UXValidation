@@ -1,26 +1,35 @@
-# 1. Definir a Função
+# 1. Defining function
+
+
 collapse_logic <- function(file_name) {
-  input_path <- file.path("Reproduce0 - Collapse input data/Data", file_name)
-  output_name <- gsub(".csv", "_lowfreqcollapsed.csv", file_name)
-  output_path <- file.path("Reproduce0 - Collapse input data/Data_Analysis", output_name)
-  log_name<- gsub(".csv", "_changes_made.csv", file_name)
-  log_path <- file.path("Reproduce0 - Collapse input data/Data_Analysis", log_name)
+
+  out_dir <- "Reproduce0 - Colapse input data/Data_Analysis"
+  if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
   
-  if (!file.exists(input_path)) {
-    message("--- Arquivo não encontrado: ", input_path)
+
+  base_file   <- basename(file_name)
+  output_name <- gsub(".csv", "_lowfreqcollapsed.csv", base_file)
+  output_path <- file.path(out_dir, output_name)
+  
+  log_name    <- gsub(".csv", "_changes_made.csv", base_file)
+  log_path    <- file.path(out_dir, log_name)
+  
+ 
+  if (!file.exists(file_name)) {
+    message("--- Arquivo não encontrado: ", file_name)
     return(NULL)
   }
   
-  df_mod <- read.csv(input_path, check.names = FALSE)
+  df_mod <- read.csv(file_name, check.names = FALSE)
   items <- names(df_mod)[sapply(df_mod, is.numeric)]
   
-  message("--- Processando: ", file_name)
+  message("---Porcessing: ", file_name)
   changes_made <- 0
   
-  # Definir explicitamente os itens Likert (ignorando 'id' ou metadados)
+
   items <- setdiff(names(df_mod), c("id", "seed", "stimulus"))
   
-  # Inicializa o data frame de log
+ 
   fusion_log <- data.frame(
     item           = character(),
     origem         = numeric(),
@@ -33,7 +42,7 @@ collapse_logic <- function(file_name) {
   changes_made <- 0
   
   for (item in items) {
-    # Ignora id e colunas não numéricas
+    # Ignore id and non numeric columns
     if (item == "id" || !is.numeric(df_mod[[item]])) next
     
     repeat {
@@ -89,12 +98,15 @@ collapse_logic <- function(file_name) {
     }
   }
   
+  
+  print("beforeWriting")
+  
   write.csv(df_mod, output_path, row.names = FALSE)
   write.csv(fusion_log,  log_path, row.names = FALSE)
-  message("DONE: Salvo em ", output_name, " (Total: ", changes_made, ")")
-} # Fim da função
+  message("DONE: Save in ", output_name, " (Total: ", changes_made, ")")
+} # 
 
-# 2. Configurar Variáveis e Rodar
+# 2
 likert_scale <- c(1, 2, 3, 4, 5, 6, 7)
 threshold <- 0.025
 #files_to_process <- paste0("ratings-", 1:6, ".csv") #used to collaps main files
@@ -102,7 +114,7 @@ threshold <- 0.025
 
 
 # Target single dataset containing NAs
-files_to_process <- c("multigroup_ratings-withNAs-withoutAttFails.csv")
+files_to_process <- c("Reproduce0 - Colapse input data/Data/multigroup_ratings-withNAs-withoutAttFails.csv")
 
 getwd()
 for (f in files_to_process) {

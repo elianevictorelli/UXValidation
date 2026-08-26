@@ -311,7 +311,7 @@ if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
 write.csv(loadings_df, file.path(output_dir, "efa_promax_factor_loadings_ordered.csv"), row.names = FALSE, na = "")
 
 # Export factor intercorrelations (Phi)
-write.csv(as.data.frame(round(efa_promax$Phi, 3)), file.path(output_dir, "efa__promax_factor_correlations.csv"), row.names = TRUE)
+write.csv(as.data.frame(round(efa_promax$Phi, 3)), file.path(output_dir, "efa_promax_factor_correlations.csv"), row.names = TRUE)
 
 # Export global fit indices
 fit_indices <- data.frame(
