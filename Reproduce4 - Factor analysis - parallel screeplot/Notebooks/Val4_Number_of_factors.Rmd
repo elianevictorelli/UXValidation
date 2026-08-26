@@ -46,20 +46,69 @@ bartlett_res <- cortest.bartlett(r_mat, n = n_sample)
 cat("--- Bartlett's Test of Sphericity ---\n")
 cat("Chi-square:", round(bartlett_res$chisq, 2), "| df:", bartlett_res$df, "\vert{} p-value:", bartlett_res$p.value, "\n\n")
 
+
+
 # 2. Kaiser-Meyer-Olkin (KMO) Measure of Sampling Adequacy
 kmo_res <- KMO(r_mat)
 cat("--- KMO Sampling Adequacy ---\n")
 cat("Overall MSA:", round(kmo_res$MSA, 3), "\n")
 
+
+# 3. Individual Item MSA Table with Qualitative Evaluation
+msa_values <- kmo_res$MSAi
+
 # Individual item MSA table
+#kmo_items <- data.frame(
+#  Item = names(kmo_res$MSAi),
+#  KMO = round(kmo_res$MSAi, 3)
+#)
+#kable(kmo_items, caption = "Individual Item Measure of Sampling Adequacy (KMO)")
+
+
 kmo_items <- data.frame(
-  Item = names(kmo_res$MSAi),
-  KMO = round(kmo_res$MSAi, 3)
+  Item = names(msa_values),
+  MSA = round(msa_values, 3),
+  Classification = cut(
+    msa_values,
+    breaks = c(0, 0.50, 0.60, 0.70, 0.80, 0.90, 1.00),
+    labels = c("Unacceptable", "Miserable", "Mediocre", "Middling", "Meritorious", "Marvelous"),
+    include.lowest = TRUE
+  ),
+  Status = ifelse(msa_values >= 0.50, "Acceptable", "Flag (< 0.50)"),
+  row.names = NULL
 )
-kable(kmo_items, caption = "Individual Item Measure of Sampling Adequacy (KMO)")
+
+
+# Render table
+knitr::kable(kmo_items, caption = "Individual Item Measure of Sampling Adequacy (KMO)")
+
+# Print warning in console if any item is problematic
+low_msa <- kmo_items[kmo_items$MSA < 0.50, ]
+if (nrow(low_msa) > 0) {
+  cat("\n[Warning] The following items have MSA < 0.50 and should be evaluated for removal:\n")
+  print(low_msa[, c("Item", "MSA")])
+}
+
+
 ```
 
 ```{r parallel analysis}
+  
+
+
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+}
+
+
+pdf_path <- file.path(output_dir, "scree_plot_parallel_analysis.pdf")
+
+
+pdf(pdf_path, width = 8, height = 6)
+
+
+
+# 2. generating the plot in the pdf
 fa_parallel <- fa.parallel(
   r_mat,
   n.obs = n_sample,
@@ -68,12 +117,19 @@ fa_parallel <- fa.parallel(
   main = "Horn's Parallel Analysis Scree Plot (EFA - MinRes)"
 )
 
+# 3. close pdf
+dev.off()
+
+# 4. Present in the screen
+plot(fa_parallel, main = "Horn's Parallel Analysis Scree Plot (EFA - MinRes)")
+
 cat("Number of factors suggested by Parallel Analysis:", fa_parallel$nfact, "\n")
+
 
 ```
 
 ```{r efa}
-k_factors <- 6
+k_factors <- 3
 
 efa_model <- fa(
   r = r_mat,
@@ -90,7 +146,7 @@ print(efa_model$loadings, cutoff = 0.30, sort = TRUE)
 # Test Promax rotation and check factor complexity
 efa_promax <- fa(
   r = r_mat,
-  nfactors = 6,
+  nfactors = 3,
   n.obs = n_sample,
   rotate = "promax",
   fm = "minres"

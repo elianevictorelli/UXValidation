@@ -32,16 +32,23 @@ on the same matrix to check whether items empirically group the way the six inte
 constructs assume, or whether the data suggests a different structure.
 
 ```{r load-data}
+#df <- read.csv(
+#  "../Data/multigroup_ratings_withNAs.csv",
+#  stringsAsFactors = FALSE, na.strings = c("NA", "")
+#)
+
 df <- read.csv(
-  "../Data/multigroup_ratings_withNAs.csv",
-  stringsAsFactors = FALSE, na.strings = c("NA", "")
+  "../Data/multigroup_ratings-withNAs.csv",
+  stringsAsFactors = FALSE,
+  na.strings = c("NA", ""),
+  check.names = FALSE
 )
 
 item_groups <- list(
-  SUS             = c("SUS_1", "SUS_2", "SUS_3", "SUS_4", "SUS_5",
-                       "SUS_6", "SUS_7", "SUS_8", "SUS_9", "SUS_10"),
-  UEQ_pragmatic   = c("UEQ_1", "UEQ_2", "UEQ_3", "UEQ_4"),
-  UEQ_hedonic     = c("UEQ_5", "UEQ_6", "UEQ_7", "UEQ_8"),
+  #SUS             = c("SUS_1", "SUS_2", "SUS_3", "SUS_4", "SUS_5",
+  #                     "SUS_6", "SUS_7", "SUS_8", "SUS_9", "SUS_10"),
+  #UEQ_pragmatic   = c("UEQ_1", "UEQ_2", "UEQ_3", "UEQ_4"),
+  #UEQ_hedonic     = c("UEQ_5", "UEQ_6", "UEQ_7", "UEQ_8"),
   Cognitive_value = c("P064", "P301", "P060", "P027"),
   Intuitiveness   = c("P088", "P026", "P4026A"),
   Visualization   = c("P106", "P089", "P098", "P097", "P022A", "P067")
@@ -55,10 +62,19 @@ item_to_group <- data.frame(
 
 all_items <- item_to_group$item
 
+#group_colors <- setNames(
+#  c("#5E4EA3", "#379EB8", "#4AAF77", "#E02884", "#F06128", "#E2A600"),
+#  names(item_groups)
+#)
+
 group_colors <- setNames(
-  c("#5E4EA3", "#379EB8", "#4AAF77", "#E02884", "#F06128", "#E2A600"),
+  c("#E02884", "#F06128", "#E2A600"),
   names(item_groups)
 )
+
+
+
+
 ```
 
 ## Compute polychoric correlations (pairwise deletion)
@@ -85,7 +101,7 @@ comparable across the whole matrix (matches the reverse-coding already applied t
 composite in the Pearson notebook).
 
 ```{r hetcor}
-reverse_items <- c("SUS_2", "SUS_4", "SUS_6", "SUS_8", "SUS_10")
+#reverse_items <- c("SUS_2", "SUS_4", "SUS_6", "SUS_8", "SUS_10")
 
 item_df <- df[, all_items]
 #for (col in reverse_items) {
@@ -95,9 +111,9 @@ item_df <- df[, all_items]
 
 
 
-for (col in reverse_items) {
-  item_df[[col]] <- 6 - as.numeric(item_df[[col]])
-}
+#for (col in reverse_items) {
+#  item_df[[col]] <- 6 - as.numeric(item_df[[col]])
+#}
 
 # Converte todas as colunas para ordered sem usar item_df[] <-
 item_df <- as.data.frame(lapply(item_df, ordered))
