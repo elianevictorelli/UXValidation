@@ -100,7 +100,7 @@ in the resulting matrix points the same "more positive" direction and signs are 
 comparable across the whole matrix (matches the reverse-coding already applied to the SUS
 composite in the Pearson notebook).
 
-```{r hetcor}
+1```{r hetcor}
 #reverse_items <- c("SUS_2", "SUS_4", "SUS_6", "SUS_8", "SUS_10")
 
 item_df <- df[, all_items]
