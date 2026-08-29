@@ -1,0 +1,641 @@
+---
+title: "Psychometric Evaluation: Comprehensive EFA, Parallel Analysis, and Multi-Model CFA Fit Comparison"
+author: "Research Team"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    theme: readable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+knitr::opts_knit$set(root.dir = getwd())
+
+# Define relative directory paths
+data_dir   <- file.path("..", "Data")
+output_dir <- file.path("..", "Data_Analysis")
+
+generated_data_dir  <- file.path(output_dir, "generatedData")
+generated_plots_dir <- file.path(output_dir, "generatedPlots")
+
+# Create output directories if they do not exist
+dir.create(generated_data_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(generated_plots_dir, recursive = TRUE, showWarnings = FALSE)
+
+```
+
+## Libraries
+
+```{r libraries}
+library(dplyr)
+library(psych)
+library(polycor)
+library(lavaan)
+library(knitr)
+library(corrplot)
+library(RColorBrewer)
+library(openxlsx)
+
+```
+
+## Utility Functions
+
+```{r functions}
+# 1. Polychoric correlation matrix computation with column name preservation
+make_corrM <- function(d = NULL, order = NULL, ...) {
+  if (is.null(d)) return(NULL)
+  
+  d <- as.data.frame(d)
+  
+  # Remove items with zero variance in the current subset
+  valid_cols <- sapply(d, function(col) length(unique(na.omit(col))) > 1)
+  d_clean <- d[, valid_cols, drop = FALSE]
+  
+  if (ncol(d_clean) < 2) return(NULL)
+  
+  # Convert to ordered factors while strictly preserving original item names
+  orig_names <- colnames(d_clean)
+  d_ordered <- as.data.frame(lapply(d_clean, ordered), check.names = FALSE)
+  colnames(d_ordered) <- orig_names
+  
+  # Compute polychoric correlation matrix using two-step approximation with pairwise deletion
+  het <- tryCatch({
+    polycor::hetcor(
+      d_ordered, 
+      use = "pairwise.complete.obs", 
+      std.err = FALSE, 
+      ML = FALSE
+    )
+  }, error = function(e) NULL)
+  
+  if (is.null(het)) return(NULL)
+  
+  corr_matrix <- het$correlations
+  dimnames(corr_matrix) <- list(orig_names, orig_names)
+  
+  # Smooth matrix if non-positive definite eigenvalues occur in small sub-samples
+  if (any(eigen(corr_matrix)$values <= 0)) {
+    corr_matrix <- psych::cor.smooth(corr_matrix)
+  }
+  
+  # Optional matrix reordering
+  if (!is.null(order) && length(order) > 0) {
+    valid_order <- intersect(order, colnames(corr_matrix))
+    if (length(valid_order) > 1) {
+      corr_matrix <- corr_matrix[valid_order, valid_order, drop = FALSE]
+    }
+  }
+  
+  return(corr_matrix)
+}
+
+# 2. Standardized extraction of CFA fit measures from lavaan objects
+# 2. Standardized extraction of CFA fit measures from lavaan objects (Safe & Robust)
+extract_fit_measures <- function(fit_obj, model_label) {
+  # Default empty row in case of non-convergence
+  empty_res <- data.frame(
+    Model          = as.character(model_label),
+    chisq          = NA_real_,
+    df             = NA_real_,
+    pvalue         = NA_real_,
+    cfi            = NA_real_,
+    tli            = NA_real_,
+    rmsea          = NA_real_,
+    rmsea.ci.lower = NA_real_,
+    rmsea.ci.upper = NA_real_,
+    srmr           = NA_real_,
+    aic            = NA_real_,
+    bic            = NA_real_,
+    stringsAsFactors = FALSE
+  )
+  
+  if (is.null(fit_obj) || !is(fit_obj, "lavaan") || !lavInspect(fit_obj, "converged")) {
+    return(empty_res)
+  }
+  
+  fm <- tryCatch({
+    fitMeasures(fit_obj, c("chisq", "df", "pvalue", "cfi", "tli", "rmsea", 
+                           "rmsea.ci.lower", "rmsea.ci.upper", "srmr", "aic", "bic"))
+  }, error = function(e) NULL)
+  
+  if (is.null(fm)) return(empty_res)
+  
+  # Extração segura valor por valor sem conflito de dimnames
+  res_df <- data.frame(
+    Model          = as.character(model_label),
+    chisq          = as.numeric(fm["chisq"]),
+    df             = as.numeric(fm["df"]),
+    pvalue         = as.numeric(fm["pvalue"]),
+    cfi            = as.numeric(fm["cfi"]),
+    tli            = as.numeric(fm["tli"]),
+    rmsea          = as.numeric(fm["rmsea"]),
+    rmsea.ci.lower = as.numeric(fm["rmsea.ci.lower"]),
+    rmsea.ci.upper = as.numeric(fm["rmsea.ci.upper"]),
+    srmr           = as.numeric(fm["srmr"]),
+    aic            = as.numeric(fm["aic"]),
+    bic            = as.numeric(fm["bic"]),
+    stringsAsFactors = FALSE
+  )
+  
+  return(res_df)
+}
+
+```
+
+## Factor Structure Specifications (1 to 4 Factors)
+
+## Factor Structure Specifications (1 to 4 Factors)
+
+```{r model definitions}
+# ------------------------------------------------------------------------------
+# 4-Factor Model (Granular: Visual Clarity + System Retrieval + Cognitive + Intuitiveness)
+# ------------------------------------------------------------------------------
+UX_factors_4f <- list(
+  vis_clarity   = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate'),
+  sys_retrieval = c('sysRetrieveInfo', 'visRemember', 'trialError'),
+  cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'tasksCompleteTask'),
+  intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+)
+
+# ------------------------------------------------------------------------------
+# 3-Factor Model (Baseline Hypothesized: Visualization + Cognitive + Intuitiveness)
+# ------------------------------------------------------------------------------
+UX_factors_3f <- list(
+  visualization = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 'visRemember', 'trialError'),
+  cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'tasksCompleteTask'),
+  intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+)
+
+# ------------------------------------------------------------------------------
+# 2-Factor Model A (Original: Interface Usability vs. Cognitive Utility)
+# ------------------------------------------------------------------------------
+UX_factors_2f_a <- list(
+  interface_usability = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 
+                          'visRemember', 'trialError', 'sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure'),
+  cognitive_utility   = c('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'tasksCompleteTask')
+)
+
+# ------------------------------------------------------------------------------
+# 2-Factor Model B (Alternative: System Experience vs. Intuitiveness)
+# ------------------------------------------------------------------------------
+UX_factors_2f_b <- list(
+  system_experience = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 
+                        'visRemember', 'trialError', 'sysThinkDeep', 'sysUseful', 'sysEnjoy', 'tasksCompleteTask'),
+  intuitiveness     = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+)
+
+# ------------------------------------------------------------------------------
+# 1-Factor Model (Unidimensional Baseline)
+# ------------------------------------------------------------------------------
+UX_factors_1f <- list(
+  general_ux = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 
+                 'visRemember', 'trialError', 'sysThinkDeep', 'sysUseful', 'sysEnjoy', 
+                 'tasksCompleteTask', 'sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+)
+
+# ------------------------------------------------------------------------------
+# Dynamic lavaan syntax generator
+# ------------------------------------------------------------------------------
+build_syntax <- function(factor_list) {
+  lines <- sapply(names(factor_list), function(f_name) {
+    paste0(f_name, " =~ ", paste(factor_list[[f_name]], collapse = " + "))
+  })
+  paste(lines, collapse = "\n")
+}
+
+syntax_1f   <- build_syntax(UX_factors_1f)
+syntax_2f_a <- build_syntax(UX_factors_2f_a)
+syntax_2f_b <- build_syntax(UX_factors_2f_b)
+syntax_3f   <- build_syntax(UX_factors_3f)
+syntax_4f   <- build_syntax(UX_factors_4f)
+
+# ------------------------------------------------------------------------------
+# Consolidate Models for CFA Testing Loop
+# ------------------------------------------------------------------------------
+cfa_models_list <- list(
+  "1_Factor"     = syntax_1f,
+  "2_Factor_A"   = syntax_2f_a,  # Usability vs Cognitive
+  "2_Factor_B"   = syntax_2f_b,  # System Experience vs Intuitiveness
+  "3_Factor"     = syntax_3f,
+  "4_Factor"     = syntax_4f
+)
+
+# Extract all unique items for dataset filtering
+columns_to_keep <- unname(unlist(UX_factors_1f))
+```
+
+## Data Loading and Preparation
+
+```{r load data}
+stimuli_letters <- c("Tableau", "JMP", "Excel", "Data Studio", "Power BI")
+
+# Load multi-group dataset
+grp_data <- read.csv(file.path(data_dir, "multigroup_ratings.csv"), encoding = "UTF-8")
+data_items_only <- grp_data %>% dplyr::select(dplyr::all_of(columns_to_keep))
+
+```
+
+## 1. Complete Polychoric Correlation Matrices (Consolidated PDF)
+
+```{r polychoric correlations pdf}
+output_corr_pdf <- file.path(generated_plots_dir, "Polychoric_Correlations_Consolidated.pdf")
+
+# Open PDF graphics device with dimensions suited for square matrices
+pdf(output_corr_pdf, width = 11, height = 11)
+
+# 1.1 Pooled Matrix (Full matrix display)
+cat("\nGenerating Complete Polychoric Correlation Plot: POOLED_ALL\n")
+c_mat_pooled <- make_corrM(data_items_only)
+
+if (!is.null(c_mat_pooled)) {
+  corrplot(
+    c_mat_pooled,
+    method      = "color",
+    col         = COL2('RdYlBu', 100),
+    type        = "full",
+    order       = "original",
+    addCoef.col = "black",
+    number.cex  = 0.70,
+    tl.col      = "black",
+    tl.srt      = 45,
+    tl.cex      = 0.85,
+    diag        = TRUE,
+    mar         = c(1, 1, 3, 1),
+    title       = "Complete Polychoric Correlation Matrix - Pooled (All Systems)"
+  )
+}
+
+# 1.2 Individual Matrices per Stimulus (Full matrix display)
+for (stim in stimuli_letters) {
+  cat("Generating Complete Polychoric Correlation Plot for stimulus:", stim, "\n")
+  
+  stim_data <- grp_data %>%
+    dplyr::filter(stimulus == stim) %>%
+    dplyr::select(dplyr::all_of(columns_to_keep)) %>%
+    droplevels()
+  
+  if (nrow(stim_data) >= 10) {
+    c_mat_stim <- make_corrM(stim_data)
+    
+    if (!is.null(c_mat_stim)) {
+      corrplot(
+        c_mat_stim,
+        method      = "color",
+        col         = COL2('RdYlBu', 100),
+        type        = "full",
+        order       = "original",
+        addCoef.col = "black",
+        number.cex  = 0.70,
+        tl.col      = "black",
+        tl.srt      = 45,
+        tl.cex      = 0.85,
+        diag        = TRUE,
+        mar         = c(1, 1, 3, 1),
+        title       = paste0("Complete Polychoric Correlation Matrix - ", stim)
+      )
+    }
+  }
+}
+
+dev.off()
+
+cat("\n========================================================================\n")
+cat(" Consolidated Complete Polychoric Correlation Matrices saved to:\n", output_corr_pdf, "\n")
+cat("========================================================================\n\n")
+
+```
+
+## 2. Parallel Analysis Consolidation
+
+```{r parallel analysis consolidated}
+all_parallel_results <- data.frame()
+
+# Helper function to compute Parallel Analysis
+extract_pa_row <- function(df_data, sample_name, plot_dir) {
+  n_obs <- nrow(df_data)
+  c_mat <- make_corrM(df_data)
+  
+  if (is.null(c_mat) || ncol(c_mat) < 2) return(NULL)
+  
+  # Export scree plot to PDF
+  pdf_path <- file.path(plot_dir, paste0("ScreePlot_PA-", sample_name, ".pdf"))
+  pdf(pdf_path, width = 8, height = 4.5)
+  
+  pa_res <- psych::fa.parallel(
+    c_mat,
+    n.obs  = n_obs,
+    fa     = "both",
+    fm     = "wls",
+    n.iter = 100,
+    plot   = TRUE,
+    main   = paste0("Parallel Analysis Scree Plot - ", sample_name)
+  )
+  dev.off()
+  
+  row_data <- data.frame(
+    Sample                  = sample_name,
+    N_Observations          = n_obs,
+    N_Items                 = ncol(c_mat),
+    Suggested_Factors_PA    = pa_res$nfact,
+    Suggested_Components_PA = pa_res$ncomp,
+    
+    FA_Eigen_Real_F1        = round(pa_res$fa.values[1], 3),
+    FA_Eigen_Sim_F1         = round(pa_res$fa.sim[1], 3),
+    FA_Eigen_Real_F2        = round(pa_res$fa.values[2], 3),
+    FA_Eigen_Sim_F2         = round(pa_res$fa.sim[2], 3),
+    FA_Eigen_Real_F3        = round(pa_res$fa.values[3], 3),
+    FA_Eigen_Sim_F3         = round(pa_res$fa.sim[3], 3),
+    FA_Eigen_Real_F4        = round(pa_res$fa.values[4], 3),
+    FA_Eigen_Sim_F4         = round(pa_res$fa.sim[4], 3)
+  )
+  
+  return(row_data)
+}
+
+# 2.1 Parallel Analysis on Pooled Data
+cat("\nRunning Parallel Analysis: Pooled Data\n")
+pooled_pa_row <- extract_pa_row(
+  df_data     = data_items_only, 
+  sample_name = "Pooled_All_Systems", 
+  plot_dir    = generated_plots_dir
+)
+if (!is.null(pooled_pa_row)) {
+  all_parallel_results <- rbind(all_parallel_results, pooled_pa_row)
+}
+
+# 2.2 Parallel Analysis by System
+for (stim in stimuli_letters) {
+  cat("Running Parallel Analysis for stimulus:", stim, "\n")
+  
+  stim_data <- grp_data %>%
+    dplyr::filter(stimulus == stim) %>%
+    dplyr::select(dplyr::all_of(columns_to_keep)) %>%
+    droplevels()
+  
+  if (nrow(stim_data) >= 10) {
+    stim_pa_row <- extract_pa_row(
+      df_data     = stim_data, 
+      sample_name = stim, 
+      plot_dir    = generated_plots_dir
+    )
+    if (!is.null(stim_pa_row)) {
+      all_parallel_results <- rbind(all_parallel_results, stim_pa_row)
+    }
+  } else {
+    message("Insufficient sample size for stimulus: ", stim)
+  }
+}
+
+knitr::kable(all_parallel_results, caption = "Consolidated Parallel Analysis Results")
+
+```
+
+## 3. EFA: Multi-Tab Workbook (Individual Sheets per Factor Solution and Stimulus)
+
+```{r efa multi-tab excel}
+# Master lists to hold separate tables per factor solution and per stimulus
+efa_loadings_sheets_list <- list()
+consolidated_variance_df <- data.frame()
+
+# Function to run EFA models (1 to 4 factors) for a given dataset
+run_efa_models <- function(df_input, label_prefix) {
+  cat("\nFitting EFA Models (1-4 Factors) for:", label_prefix, "\n")
+  
+  c_mat <- make_corrM(df_input)
+  if (is.null(c_mat)) return(list(loadings_by_factor = list(), variance = NULL))
+  
+  n_obs <- nrow(df_input)
+  local_loadings_by_factor <- list()
+  local_variance_list <- list()
+  
+  for (nf in 1:4) {
+    rot <- if (nf == 1) "none" else "promax"
+    
+    efa_fit <- tryCatch({
+      psych::fa(
+        r        = c_mat, 
+        nfactors = nf, 
+        n.obs    = n_obs, 
+        rotate   = rot, 
+        fm       = "wls"
+      )
+    }, error = function(e) {
+      cat("Note: EFA", nf, "factor(s) did not converge for", label_prefix, "\n")
+      NULL
+    })
+    
+    if (!is.null(efa_fit)) {
+      # 1. Build factor loadings table
+      raw_loadings <- unclass(efa_fit$loadings)
+      item_names   <- rownames(raw_loadings)
+      
+      loadings_table <- data.frame(
+        Item = item_names,
+        stringsAsFactors = FALSE
+      )
+      
+      for (f_idx in 1:nf) {
+        f_col_name <- paste0("Loading_F", f_idx)
+        loadings_table[[f_col_name]] <- round(raw_loadings[item_names, f_idx], 4)
+      }
+      
+      loadings_table$Communality_h2 <- round(efa_fit$communality[item_names], 4)
+      loadings_table$Uniqueness_u2  <- round(efa_fit$uniquenesses[item_names], 4)
+      loadings_table$Complexity     <- round(efa_fit$complexity[item_names], 4)
+      
+      local_loadings_by_factor[[paste0(nf, "F")]] <- loadings_table
+      
+      # 2. Extract variance explained metrics with fixed 4 factor slots
+      v_mat <- efa_fit$Vaccounted
+      
+      for (r_name in rownames(v_mat)) {
+        var_row <- data.frame(
+          Sample                   = label_prefix,
+          Model_Solution           = paste0(nf, "_Factor"),
+          Metric                   = r_name,
+          Factor_1                 = if (ncol(v_mat) >= 1) round(v_mat[r_name, 1], 4) else NA_real_,
+          Factor_2                 = if (ncol(v_mat) >= 2) round(v_mat[r_name, 2], 4) else NA_real_,
+          Factor_3                 = if (ncol(v_mat) >= 3) round(v_mat[r_name, 3], 4) else NA_real_,
+          Factor_4                 = if (ncol(v_mat) >= 4) round(v_mat[r_name, 4], 4) else NA_real_,
+          Total_Variance_Explained = NA_real_,
+          stringsAsFactors         = FALSE
+        )
+        
+        if (r_name %in% c("Cumulative Var", "Cum.Var")) {
+          var_row$Total_Variance_Explained <- round(v_mat[r_name, ncol(v_mat)], 4)
+        } else if (r_name %in% c("Proportion Var", "Prop.Var", "SS loadings")) {
+          var_row$Total_Variance_Explained <- round(sum(v_mat[r_name, ]), 4)
+        }
+        
+        local_variance_list[[length(local_variance_list) + 1]] <- var_row
+      }
+    }
+  }
+  
+  res_variance <- if (length(local_variance_list) > 0) dplyr::bind_rows(local_variance_list) else NULL
+  
+  return(list(loadings_by_factor = local_loadings_by_factor, variance = res_variance))
+}
+
+# 3.1 Execute EFA on Pooled Data
+pooled_efa <- run_efa_models(data_items_only, "Pooled")
+if (!is.null(pooled_efa$variance)) {
+  consolidated_variance_df <- dplyr::bind_rows(consolidated_variance_df, pooled_efa$variance)
+}
+
+for (nf in 1:4) {
+  nf_tag <- paste0(nf, "F")
+  if (!is.null(pooled_efa$loadings_by_factor[[nf_tag]])) {
+    sheet_title <- paste0(nf_tag, "_Pooled")
+    efa_loadings_sheets_list[[sheet_title]] <- pooled_efa$loadings_by_factor[[nf_tag]]
+  }
+}
+
+# 3.2 Execute EFA per Stimulus and Populate Dedicated Sheets
+for (stim in stimuli_letters) {
+  stim_data <- grp_data %>% 
+    dplyr::filter(stimulus == stim) %>% 
+    dplyr::select(dplyr::all_of(columns_to_keep)) %>%
+    droplevels()
+  
+  if (nrow(stim_data) > 10) {
+    stim_efa <- run_efa_models(stim_data, stim)
+    if (!is.null(stim_efa$variance)) {
+      consolidated_variance_df <- dplyr::bind_rows(consolidated_variance_df, stim_efa$variance)
+    }
+    
+    clean_stim_name <- gsub(" ", "_", stim)
+    
+    for (nf in 1:4) {
+      nf_tag <- paste0(nf, "F")
+      if (!is.null(stim_efa$loadings_by_factor[[nf_tag]])) {
+        sheet_title <- paste0(nf_tag, "_", clean_stim_name)
+        sheet_title <- substr(sheet_title, 1, 31)
+        efa_loadings_sheets_list[[sheet_title]] <- stim_efa$loadings_by_factor[[nf_tag]]
+      }
+    }
+  }
+}
+
+# 3.3 Create and Populate Multi-Tab Excel Workbook
+efa_excel_wb <- createWorkbook()
+
+# Sheet 1: Parallel Analysis
+addWorksheet(efa_excel_wb, "Parallel_Analysis")
+writeData(efa_excel_wb, "Parallel_Analysis", all_parallel_results)
+
+# Sheet 2: Consolidated Variance Explained across all solutions and samples
+addWorksheet(efa_excel_wb, "Variance_Explained")
+writeData(efa_excel_wb, "Variance_Explained", consolidated_variance_df)
+
+# Sheets 3+: Dedicated Sheets for each Factor Solution x Stimulus
+for (s_name in names(efa_loadings_sheets_list)) {
+  addWorksheet(efa_excel_wb, s_name)
+  writeData(efa_excel_wb, s_name, efa_loadings_sheets_list[[s_name]])
+}
+
+output_efa_excel <- file.path(generated_data_dir, "EFA_Summary_Consolidated.xlsx")
+saveWorkbook(efa_excel_wb, output_efa_excel, overwrite = TRUE)
+
+cat("\n========================================================================\n")
+cat(" EFA Multi-Tab Workbook saved to:\n", output_efa_excel, "\n")
+cat(" Total worksheets created:", length(names(efa_loadings_sheets_list)) + 2, "\n")
+cat("========================================================================\n\n")
+
+```
+
+
+## 4. CFA: Multi-Tab Excel Workbook Generation (1 to 4 Factors)
+
+```{r cfa consolidated excel}
+# 4.1 Pooled CFA Models
+pooled_cfa_list <- list()
+
+for (m_name in names(cfa_models_list)) {
+  m_syntax <- cfa_models_list[[m_name]]
+  
+  fit_pooled <- tryCatch({
+    lavaan::cfa(
+      model   = m_syntax,
+      data    = data_items_only,
+      missing = "fiml"
+    )
+  }, error = function(e) NULL)
+  
+  pooled_cfa_list[[m_name]] <- extract_fit_measures(fit_pooled, paste0("Pooled_", m_name))
+}
+pooled_cfa_results <- dplyr::bind_rows(pooled_cfa_list)
+
+# 4.2 Multigroup CFA Models
+multigroup_cfa_list <- list()
+grp_data_clean <- grp_data %>% dplyr::filter(stimulus %in% stimuli_letters) %>% droplevels()
+
+for (m_name in names(cfa_models_list)) {
+  m_syntax <- cfa_models_list[[m_name]]
+  
+  fit_mg <- tryCatch({
+    lavaan::cfa(
+      model   = m_syntax,
+      data    = grp_data_clean,
+      group   = "stimulus",
+      missing = "fiml"
+    )
+  }, error = function(e) NULL)
+  
+  multigroup_cfa_list[[m_name]] <- extract_fit_measures(fit_mg, paste0("Multigroup_", m_name))
+}
+multigroup_cfa_results <- dplyr::bind_rows(multigroup_cfa_list)
+
+# 4.3 Individual Systems CFA Models
+individual_cfa_list <- list()
+
+for (stim in stimuli_letters) {
+  stim_data <- grp_data %>% dplyr::filter(stimulus == stim) %>% droplevels()
+  
+  for (m_name in names(cfa_models_list)) {
+    m_syntax <- cfa_models_list[[m_name]]
+    
+    fit_indiv <- tryCatch({
+      lavaan::cfa(
+        model   = m_syntax,
+        data    = stim_data,
+        missing = "fiml"
+      )
+    }, error = function(e) NULL)
+    
+    label_entry <- paste0(stim, "_", m_name)
+    individual_cfa_list[[label_entry]] <- extract_fit_measures(fit_indiv, label_entry)
+  }
+}
+individual_cfa_results <- dplyr::bind_rows(individual_cfa_list)
+
+# 4.4 Build and Save Multi-Tab Excel Workbook for CFA
+cfa_excel_wb <- createWorkbook()
+
+# Tab 1: Pooled Overall
+addWorksheet(cfa_excel_wb, "Pooled_Overall")
+writeData(cfa_excel_wb, "Pooled_Overall", pooled_cfa_results)
+
+# Tab 2: Multigroup
+addWorksheet(cfa_excel_wb, "Multigroup")
+writeData(cfa_excel_wb, "Multigroup", multigroup_cfa_results)
+
+# Tab 3: Individual by Stimulus
+addWorksheet(cfa_excel_wb, "By_Stimulus")
+writeData(cfa_excel_wb, "By_Stimulus", individual_cfa_results)
+
+output_cfa_excel <- file.path(generated_data_dir, "CFA_Model_Fit_Comparison.xlsx")
+saveWorkbook(cfa_excel_wb, output_cfa_excel, overwrite = TRUE)
+
+cat("\n========================================================================\n")
+cat(" CFA Consolidated Multi-Tab Workbook saved to:\n", output_cfa_excel, "\n")
+cat("========================================================================\n\n")
+
+print(knitr::kable(pooled_cfa_results, digits = 3, caption = "CFA Fit Indices (Pooled Data Preview)"))
+```
+
+```
+
+```

@@ -7,8 +7,10 @@ output:
     theme: readable
 ---
 
-```{r setup, include=FALSE}
+```{r setup}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+knitr::opts_knit$set(root.dir = getwd())
 
 # Required libraries
 library(psych)

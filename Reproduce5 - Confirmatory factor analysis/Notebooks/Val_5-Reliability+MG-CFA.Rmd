@@ -8,8 +8,22 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 #set working directory
-my_dir <- "your_data_directory" #eg: "absolute_path_to/Supplementary-material-folder/3 - Scale validation/"
-knitr::opts_knit$set(root.dir = paste(my_dir, "Results/Data_Analysis", sep=""))
+knitr::opts_knit$set(root.dir = getwd())
+
+# Define the relative path to the Data directory
+data_dir <- file.path("..", "Data")
+output_dir  <- file.path("..", "Data_Analysis")
+
+getwd()
+print(data_dir)
+print(output_dir)
+knitr::opts_knit$get("root.dir")
+
+
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+}
+
 ```
 
 ## Librairies
@@ -20,7 +34,7 @@ library(knitr) #RStudio
 library(png) #output png
 library(corrplot) #plot correlation matrix
 library(misty) #Little's test for MCAR
-library(mice)
+#library(mice)
 library(mifa) # MICE for missing data handling
 library(psych) # for EFA
 library(RColorBrewer) #for corr matrix
@@ -29,80 +43,38 @@ library(lavaan) # for cfa
 ## Functions
 ```{r functions}
 
-make_corrM_PREVIS <- function(d, order = NULL, nb_fa = 4){
-  
-  if (anyNA(d)){
-  # Multiple imputation using Fully Conditional Specification (FCS) implemented by the MICE algorithm as described in Van Buuren and Groothuis-Oudshoorn (2011) doi:10.18637/jss.v045.i03
-  #run MICE and generate covariance matrix with with mifa package
-  mi <- invisible(mifa(
-  data      = d, 
-  n_pc      = nb_fa, #factors estimates
-  ci        = "fieller", #confidence interval method
-  print     = FALSE,
-  m = 5 #number of MICE iterations
-  ))
-  
-  corr_MICE <- cov2cor(mi$cov_combined)
-  
-  if (length(order)>0){
-    corrM_reorder <- corr_MICE[order, order]
-    corr_MICE <- corrM_reorder
-  }
-  
-  # corrM <- corFiml(d)
-  return(corr_MICE)} else {
-    return(cor(d))
-  }
-}
-
-
-make_corrM_reusing_UXVIS <- function(path = "../Data_Analysis/polychoric_correlation_matrix_r.csv", order = NULL) {
-  
- 
-  if (!file.exists(path)) {
-    stop("Arquivo da matriz de correlação não encontrado em: ", path)
-  }
-  
-  # 2. Ler o arquivo (suporta CSV ou RDS)
-  if (grepl("\\.rds$", path, ignore.case = TRUE)) {
-    r_mat <- readRDS(path)
-  } else {
-    # Lê o CSV garantindo nomes originais e definindo a primeira coluna como nomes de linha
-    r_df <- read.csv(path, row.names = 1, check.names = FALSE)
-    r_mat <- as.matrix(r_df)
-  }
-  
-  # Garante que seja matriz numérica
-  r_mat <- as.matrix(r_mat)
-  
-  # 3. Aplicar reordenação das variáveis se fornecida
-  if (!is.null(order) && length(order) > 0) {
-    # Filtra apenas itens válidos para evitar erro de índice fora de alcance
-    valid_order <- intersect(order, rownames(r_mat))
-    r_mat <- r_mat[valid_order, valid_order]
-  }
-  
-  return(r_mat)
-}
-
 
 make_corrM <- function(d = NULL, order = NULL, ...) {
-  # 1. Tratamento caso d seja nulo
-  if (is.null(d)) {
-    if (exists("r_mat")) return(r_mat)
-    return(NULL)
-  }
+ 
+  #if (is.null(d)) {
+  #  if (exists("r_mat")) return(r_mat)
+  #  return(NULL)
+  #}
   
-  # 2. Remove itens com variância zero no subconjunto atual
+  
+  print("corr M linha 55")
+  
+   # Mantain the original column names 
+  d <- as.data.frame(d)
+  
+  # 2. Remove items with 0 variance 
   valid_cols <- sapply(d, function(col) length(unique(na.omit(col))) > 1)
   d_clean <- d[, valid_cols, drop = FALSE]
+
   
   if (ncol(d_clean) < 2) return(NULL)
   
-  # 3. Converte para fatores ordenados
-  d_ordered <- as.data.frame(lapply(d_clean, ordered))
+ 
   
-  # 4. Calcula correlação policórica com pairwise deletion
+  # 3. Convert to orederd factors and mantain the column names 
+  orig_names <- colnames(d_clean)
+  d_ordered <- as.data.frame(lapply(d_clean, ordered), check.names = FALSE)
+  colnames(d_ordered) <- orig_names
+  
+  
+  
+  
+  # 4. Calculate the polychoric correlation with pairwise deletion
   het <- tryCatch({
     polycor::hetcor(
       d_ordered, 
@@ -112,19 +84,26 @@ make_corrM <- function(d = NULL, order = NULL, ...) {
     )
   }, error = function(e) NULL)
   
+
+  
+  
   if (is.null(het)) return(NULL)
   
   corr_matrix <- het$correlations
   
-  # 5. Reordenação opcional
+  # Original names in columns and rows of the matrix 
+  dimnames(corr_matrix) <- list(orig_names, orig_names)
+  
+  # 5. Reordering opcional
   if (!is.null(order) && length(order) > 0) {
     valid_order <- intersect(order, colnames(corr_matrix))
-    corr_matrix <- corr_matrix[valid_order, valid_order, drop = FALSE]
+    if (length(valid_order) > 1) {
+      corr_matrix <- corr_matrix[valid_order, valid_order, drop = FALSE]
+    }
   }
   
   return(corr_matrix)
 }
-
 
 # Applicability of EFA
 
@@ -166,7 +145,7 @@ missingTest <- function(na_percent, mcar_pvalue){
 # Parallel analysis for each group
 
 parallelAnalysis <- function(corrMatrix, observations = nrow(the_data), file_suffix){
-  pdf(paste(paste("generatedPlots-CFA/ScreePlot-",file_suffix,sep=""),'.pdf'), width=8, height=4)
+  pdf(paste(paste(file.path(output_dir, "generatedPlots-CFA/ScreePlot-"),file_suffix,sep=""),'.pdf'), width=8, height=4)
   parallel <- fa.parallel(corrMatrix, n.obs=observations, fa="fa", n.iter=100, main="Scree plots with parallel analysis", error.bars = TRUE)
   print(parallel)
   dev.off() 
@@ -211,6 +190,8 @@ stimulus_data_test <- function(the_data, the_letter){
 
 ### Multiple Imputation for missing values
   cat(paste("\n Multiple Imputation for missing values in", the_letter, "\n"))
+  
+  print("4 corr M sem parametro")
   #corr_M <- make_corrM(the_data, nb_fa = 4) PREVIS
   corr_M <- make_corrM()
  
@@ -242,7 +223,11 @@ fitMeasures_output <- function(modelFit, model_name) {
 
   fit_Indices <- fitMeasures(modelFit, output = "matrix")
   colnames(fit_Indices)[1] <- c(model_name)
-  write.csv(fit_Indices,file=(paste("generatedData-CFA/fit_indices-", model_name, ".csv", sep="")))
+  write.csv(fit_Indices,file= file.path(output_dir, (paste("generatedData-CFA/fit_indices-", model_name, ".csv", sep=""))))
+  
+  
+  #file = file.path(pasta_saida, nome_arquivo)
+  
   
   cat("\nDETAILS\n=================\n")
   print(fit_Indices)
@@ -288,10 +273,17 @@ this_model <- "Tested_model"
 #  dataRead = list("inform","identifi","find"),
 #  dataFeat = list("visibl","see")
 
+#UX_factors <- list(
+#  visualization = list('P106','P089','P098','P097', 'P022A','P067'),
+#  cognitive = list('P064', 'P301', 'P060', 'P027'),
+#  intuitiveness = list('P088', 'P026', 'P4026A')
+#)
+
+
 UX_factors <- list(
-  visualization = list('P106','P089','P098','P097', 'P022A','P067'),
-  cognitive = list('P064', 'P301', 'P060', 'P027'),
-  intuitiveness = list('P088', 'P026', 'P4026A')
+  visualization = list('visFaithful','visSimpleUnderstand','visAppropriate','sysRetrieveInfo', 'visRemember','trialError'),
+  cognitive = list('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'tasksCompleteTask'),
+  intuitiveness = list('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
 )
 
 
@@ -314,13 +306,21 @@ data <- subset(grp_data, select = -c(stimulus))
 
 # and make directories if needed
 
-if (!dir.exists("generatedData-CFA/")) {
-  dir.create("generatedData-CFA/", recursive = FALSE)
+
+
+generated_data_dir  <- file.path(output_dir, "generatedData-CFA")
+generated_plots_dir  <- file.path(output_dir, "generatedPlots-CFA")
+
+# Cria as pastas caso não existam
+if (!dir.exists(generated_data_dir)) {
+  dir.create(generated_data_dir, recursive = TRUE)
 }
 
-if (!dir.exists("generatedPlots-CFA/")) {
-  dir.create("generatedPlots-CFA/", recursive = FALSE)
+if (!dir.exists(generated_plots_dir)) {
+  dir.create(generated_plots_dir, recursive = TRUE)
 }
+
+
 
 ```
 
@@ -354,73 +354,28 @@ cat("==========================================\n")
 cat("==========================================\n")
 cat("==========================================\n\n")
 
-# Legacy function preserved for comparison
-make_corrM_PREVIS <- function(d, order = NULL, nb_fa = 4) {
-  if (anyNA(d)) {
-    mi <- invisible(mifa(
-      data      = d, 
-      n_pc      = nb_fa,
-      ci        = "fieller",
-      print     = FALSE,
-      m         = 5
-    ))
-    corr_MICE <- cov2cor(mi$cov_combined)
-    if (length(order) > 0) {
-      corr_MICE <- corr_MICE[order, order]
-    }
-    return(corr_MICE)
-  } else {
-    return(cor(d))
-  }
-}
+colnames(columns_to_keep)
 
-# Robust polychoric correlation builder with zero-variance handling
-make_corrM <- function(d, order = NULL, ...) {
-  # Drop items with zero variance in the current subset
-  valid_cols <- sapply(d, function(col) length(unique(na.omit(col))) > 1)
-  d_clean <- d[, valid_cols, drop = FALSE]
-  
-  if (ncol(d_clean) < 2) {
-    return(NULL)
-  }
-  
-  d_ordered <- as.data.frame(lapply(d_clean, ordered))
-  
-  het <- tryCatch({
-    polycor::hetcor(
-      d_ordered, 
-      use = "pairwise.complete.obs", 
-      std.err = FALSE, 
-      ML = FALSE
-    )
-  }, error = function(e) {
-    NULL
-  })
-  
-  if (is.null(het)) {
-    return(NULL)
-  }
-  
-  corr_matrix <- het$correlations
-  
-  if (!is.null(order) && length(order) > 0) {
-    valid_order <- intersect(order, colnames(corr_matrix))
-    corr_matrix <- corr_matrix[valid_order, valid_order, drop = FALSE]
-  }
-  
-  return(corr_matrix)
-}
+data_reduced_factors <- data %>% 
+  dplyr::select(dplyr::all_of(unname(columns_to_keep)))
+
 
 # Correlation Matrix with selected items
-data_reduced_factors <- data %>% dplyr::select(dplyr::all_of(columns_to_keep))
+#data_reduced_factors <- data %>% dplyr::select(dplyr::all_of(columns_to_keep))
+
+print("1 - antes make_corrM")
+
+colnames(data_reduced_factors)
 
 corrM <- make_corrM(data_reduced_factors)
 
 ## Save as CSV
-write.csv(corrM, "generatedData-CFA/subscales-correlation.csv")
+#write.csv(corrM, "generatedData-CFA/subscales-correlation.csv")
+write.csv(corrM, file.path(output_dir, "generatedData-CFA/subscales-correlation.csv"))
+
 
 ## Save as PDF
-this_file <- "generatedPlots-CFA/subscales-corr.pdf"
+this_file <- file.path(output_dir, "generatedPlots-CFA/subscales-corr.pdf")
 pdf(this_file, height = 15, width = 15)
 plot <- corrplot(
   corrM,
@@ -436,6 +391,7 @@ plot <- corrplot(
 )
 dev.off()
 
+
 cat("\n\n==========================================\n")
 cat("==========================================\n")
 cat("==========================================\n")
@@ -444,26 +400,6 @@ cat("==========================================\n")
 cat("==========================================\n")
 cat("==========================================\n\n")
 
-# Legacy reliability builder preserved for comparison
-make_reliability_df_PREVIS <- function(this_data, col_name, row_suffix = "") {
-  raw_alpha_name <- paste0("raw_alpha", row_suffix)
-  std_alpha_name <- paste0("std.alpha", row_suffix)
-  tot_omega_name <- paste0("omega.tot", row_suffix)
-  
-  this_reliability_df <- data.frame(row.names = c(raw_alpha_name, std_alpha_name, tot_omega_name))
-  
-  alpha_values <- psych::alpha(this_data)
-  
-  nb_obs <- nrow(this_data)
-  corrM_sub <- make_corrM_PREVIS(this_data, nb_fa = 1)
-  om <- omega(corrM_sub, n.obs = nb_obs, 1)
-  
-  this_reliability_df[raw_alpha_name, col_name] <- alpha_values$total$raw_alpha
-  this_reliability_df[std_alpha_name, col_name] <- alpha_values$total$std.alpha
-  this_reliability_df[tot_omega_name, col_name]  <- om$omega.tot
-  
-  return(this_reliability_df)
-}
 
 # Protected reliability computation with zero-variance guards
 make_reliability_df <- function(this_data, col_name, row_suffix = "") {
@@ -499,6 +435,11 @@ make_reliability_df <- function(this_data, col_name, row_suffix = "") {
   # 2. McDonald's Omega
   tryCatch({
     nb_obs <- nrow(this_data_clean)
+    
+    print("2 - antes make_corrM")
+
+    colnames(data_reduced_factors)
+
     corrM_sub <- make_corrM(this_data_clean)
     
     if (!is.null(corrM_sub) && ncol(corrM_sub) >= 2) {
@@ -568,7 +509,7 @@ for (factor in names(UX_factors)) {
 
 # Export consolidated metrics
 reliability_df_full <- rbind(subscale_reliability_df, subscale_group_reliability_df)
-write.csv(reliability_df_full, file = "generatedData-CFA/reliability-subscales.csv")
+write.csv(reliability_df_full, file.path(output_dir, "generatedData-CFA/reliability-subscales.csv"))
 ```
 
 ```{r run CFA analysis}
@@ -604,9 +545,7 @@ fit_overall_pooled <- cfa(
 summary(fit_overall_pooled, fit.measures = TRUE, standardized = TRUE)
 fitMeasures_output(fit_overall_pooled, paste0(this_model, "-POOLED_OVERALL"))
 
-
-  
-  # Filtra apenas os estímulos selecionados
+# Filtra apenas os estímulos selecionados
 grp_data_cfa <- grp_data %>%
   dplyr::filter(stimulus %in% stimuli_letters) %>%
   droplevels()
@@ -744,10 +683,10 @@ lavTestLRT(fit1, fit2, fit3)
 #We already ran checks on overall data. Now we also check individual subgroups
 ```{r individual group data normality and EFA appropriateness checks}
 
-row_names <- c("alpha", "omega.tot (1 factor)", "omega.tot (4 factors)")
+row_names <- c("alpha", "omega.tot (1 factor)", "omega.tot (3 factors)")
 reliab_df <- data.frame(row.names = row_names)
 
-nbs_factors <- c(1, 4)
+nbs_factors <- c(1, 3)
 
 for (letter in stimuli_letters) {
   cat(paste("\n=========================================="))
@@ -782,6 +721,11 @@ for (letter in stimuli_letters) {
     cat(paste("\n--- RELIABILITY with", nb_f, "factor(s) in", letter, "---\n"))
     
     tryCatch({
+      
+         print("3 - antes make_corrM")
+
+      colnames(subset_data)
+      
       c_mat <- make_corrM(subset_data)
       
       if (!is.null(c_mat) && ncol(c_mat) >= 2) {
@@ -836,7 +780,7 @@ for (letter in stimuli_letters) {
 }
 
 # Salvar tabela de confiabilidade por estímulo
-write.csv(reliab_df, file = "generatedData-CFA/reliability-global-by-stimuli.csv")
+write.csv(reliab_df, file.path(output_dir, "generatedData-CFA/reliability-global-by-stimuli.csv"))
 
 ```
 
