@@ -496,15 +496,15 @@ extract_fit_measures &lt;- function(fit_obj, model_label) {
 <h2>Model Factor Definitions &amp; Global Registry</h2>
 <pre class="r"><code># 4-Factor Model A (Visualization Clarity + Visualization Retrieval) + Cognitive + Intuitiveness
 
-# 4-Factor Model B (Visualization -  &#39;trialError&#39;) +   (Cognitive  - &#39;taskComplete&#39;), +new factor (trialError + taskComplete) +  Intuitiveness
+# 4-Factor Model B (Visualization -  &#39;VisTrialError&#39;) +   (Cognitive  - &#39;CogTaskComplete&#39;), +new factor (VisTrialError + CogTaskComplete) +  Intuitiveness
 
 # 3-Factor Model A: Our selection of Visualization + Cognitive + Intuitiveness)
 
-# 3-Factor Model B: Our selection of items without trialError item
+# 3-Factor Model B: Our selection of items without VisTrialError item
 
 # 3-Factor Model C:  Our selection of items without taskCompletion item
 
-# 3-Factor Model D:  Our selection of items without trialError and taskCompletion items
+# 3-Factor Model D:  Our selection of items without VisTrialError and taskCompletion items
 
 # 2-Factor Model A: Interface Usability vs. Cognitive Utility
 
@@ -515,59 +515,59 @@ extract_fit_measures &lt;- function(fit_obj, model_label) {
 
 models_factor_specs &lt;- list(
   &quot;1_Factor&quot; = list(
-    general_ux = c(&#39;visFaithful&#39;, &#39;visSimpleUnderstand&#39;, &#39;visAppropriate&#39;, &#39;sysRetrieveInfo&#39;, 
-                   &#39;visRemember&#39;, &#39;trialError&#39;, &#39;sysThinkDeep&#39;, &#39;sysUseful&#39;, &#39;sysEnjoy&#39;, 
-                   &#39;taskComplete&#39;, &#39;sysSimpleUnderstand&#39;, &#39;sysEasyStart&#39;, &#39;analysisConfigure&#39;)
+    general_ux = c(&#39;VisFaithful&#39;, &#39;VisSimpleUnderstand&#39;, &#39;VisAppropriate&#39;, &#39;VisSysRetrieveInfo&#39;, 
+                   &#39;VisRemember&#39;, &#39;VisTrialError&#39;, &#39;CogSysThinkDeep&#39;, &#39;CogSysUseful&#39;, &#39;CogSysEnjoy&#39;, 
+                   &#39;CogTaskComplete&#39;, &#39;IntSysSimpleUnderstand&#39;, &#39;IntSysEasyStart&#39;, &#39;IntAnalysisConfigure&#39;)
   ),
   
   &quot;2_Factor_A&quot; = list(
-    interface_usability = c(&#39;visFaithful&#39;, &#39;visSimpleUnderstand&#39;, &#39;visAppropriate&#39;, &#39;sysRetrieveInfo&#39;, 
-                            &#39;visRemember&#39;, &#39;trialError&#39;, &#39;sysSimpleUnderstand&#39;, &#39;sysEasyStart&#39;, &#39;analysisConfigure&#39;),
-    cognitive_utility   = c(&#39;sysThinkDeep&#39;, &#39;sysUseful&#39;, &#39;sysEnjoy&#39;, &#39;taskComplete&#39;)
+    interface_usability = c(&#39;VisFaithful&#39;, &#39;VisSimpleUnderstand&#39;, &#39;VisAppropriate&#39;, &#39;VisSysRetrieveInfo&#39;, 
+                            &#39;VisRemember&#39;, &#39;VisTrialError&#39;, &#39;IntSysSimpleUnderstand&#39;, &#39;IntSysEasyStart&#39;, &#39;IntAnalysisConfigure&#39;),
+    cognitive_utility   = c(&#39;CogSysThinkDeep&#39;, &#39;CogSysUseful&#39;, &#39;CogSysEnjoy&#39;, &#39;CogTaskComplete&#39;)
   ),
   
   &quot;2_Factor_B&quot; = list(
-    system_experience = c(&#39;visFaithful&#39;, &#39;visSimpleUnderstand&#39;, &#39;visAppropriate&#39;, &#39;sysRetrieveInfo&#39;, 
-                          &#39;visRemember&#39;, &#39;trialError&#39;, &#39;sysThinkDeep&#39;, &#39;sysUseful&#39;, &#39;sysEnjoy&#39;, &#39;taskComplete&#39;),
-    intuitiveness     = c(&#39;sysSimpleUnderstand&#39;, &#39;sysEasyStart&#39;, &#39;analysisConfigure&#39;)
+    system_experience = c(&#39;VisFaithful&#39;, &#39;VisSimpleUnderstand&#39;, &#39;VisAppropriate&#39;, &#39;VisSysRetrieveInfo&#39;, 
+                          &#39;VisRemember&#39;, &#39;VisTrialError&#39;, &#39;CogSysThinkDeep&#39;, &#39;CogSysUseful&#39;, &#39;CogSysEnjoy&#39;, &#39;CogTaskComplete&#39;),
+    intuitiveness     = c(&#39;IntSysSimpleUnderstand&#39;, &#39;IntSysEasyStart&#39;, &#39;IntAnalysisConfigure&#39;)
   ),
   
   &quot;3_Factor_A&quot; = list(
-    visualization = c(&#39;visFaithful&#39;, &#39;visSimpleUnderstand&#39;, &#39;visAppropriate&#39;, &#39;sysRetrieveInfo&#39;, &#39;visRemember&#39;, &#39;trialError&#39;),
-    cognitive     = c(&#39;sysThinkDeep&#39;, &#39;sysUseful&#39;, &#39;sysEnjoy&#39;, &#39;taskComplete&#39;),
-    intuitiveness = c(&#39;sysSimpleUnderstand&#39;, &#39;sysEasyStart&#39;, &#39;analysisConfigure&#39;)
+    visualization = c(&#39;VisFaithful&#39;, &#39;VisSimpleUnderstand&#39;, &#39;VisAppropriate&#39;, &#39;VisSysRetrieveInfo&#39;, &#39;VisRemember&#39;, &#39;VisTrialError&#39;),
+    cognitive     = c(&#39;CogSysThinkDeep&#39;, &#39;CogSysUseful&#39;, &#39;CogSysEnjoy&#39;, &#39;CogTaskComplete&#39;),
+    intuitiveness = c(&#39;IntSysSimpleUnderstand&#39;, &#39;IntSysEasyStart&#39;, &#39;IntAnalysisConfigure&#39;)
   ),
   
   &quot;3_Factor_B&quot; = list(
-    visualization = c(&#39;visFaithful&#39;, &#39;visSimpleUnderstand&#39;, &#39;visAppropriate&#39;, &#39;sysRetrieveInfo&#39;, &#39;visRemember&#39;),
-    cognitive     = c(&#39;sysThinkDeep&#39;, &#39;sysUseful&#39;, &#39;sysEnjoy&#39;, &#39;taskComplete&#39;),
-    intuitiveness = c(&#39;sysSimpleUnderstand&#39;, &#39;sysEasyStart&#39;, &#39;analysisConfigure&#39;)
+    visualization = c(&#39;VisFaithful&#39;, &#39;VisSimpleUnderstand&#39;, &#39;VisAppropriate&#39;, &#39;VisSysRetrieveInfo&#39;, &#39;VisRemember&#39;),
+    cognitive     = c(&#39;CogSysThinkDeep&#39;, &#39;CogSysUseful&#39;, &#39;CogSysEnjoy&#39;, &#39;CogTaskComplete&#39;),
+    intuitiveness = c(&#39;IntSysSimpleUnderstand&#39;, &#39;IntSysEasyStart&#39;, &#39;IntAnalysisConfigure&#39;)
   ),
   
   &quot;3_Factor_C&quot; = list(
-    visualization = c(&#39;visFaithful&#39;, &#39;visSimpleUnderstand&#39;, &#39;visAppropriate&#39;, &#39;sysRetrieveInfo&#39;, &#39;visRemember&#39;, &#39;trialError&#39;),
-    cognitive     = c(&#39;sysThinkDeep&#39;, &#39;sysUseful&#39;, &#39;sysEnjoy&#39;),
-    intuitiveness = c(&#39;sysSimpleUnderstand&#39;, &#39;sysEasyStart&#39;, &#39;analysisConfigure&#39;)
+    visualization = c(&#39;VisFaithful&#39;, &#39;VisSimpleUnderstand&#39;, &#39;VisAppropriate&#39;, &#39;VisSysRetrieveInfo&#39;, &#39;VisRemember&#39;, &#39;VisTrialError&#39;),
+    cognitive     = c(&#39;CogSysThinkDeep&#39;, &#39;CogSysUseful&#39;, &#39;CogSysEnjoy&#39;),
+    intuitiveness = c(&#39;IntSysSimpleUnderstand&#39;, &#39;IntSysEasyStart&#39;, &#39;IntAnalysisConfigure&#39;)
   ),
   
   &quot;3_Factor_D&quot; = list(
-    visualization = c(&#39;visFaithful&#39;, &#39;visSimpleUnderstand&#39;, &#39;visAppropriate&#39;, &#39;sysRetrieveInfo&#39;, &#39;visRemember&#39;),
-    cognitive     = c(&#39;sysThinkDeep&#39;, &#39;sysUseful&#39;, &#39;sysEnjoy&#39;),
-    intuitiveness = c(&#39;sysSimpleUnderstand&#39;, &#39;sysEasyStart&#39;, &#39;analysisConfigure&#39;)
+    visualization = c(&#39;VisFaithful&#39;, &#39;VisSimpleUnderstand&#39;, &#39;VisAppropriate&#39;, &#39;VisSysRetrieveInfo&#39;, &#39;VisRemember&#39;),
+    cognitive     = c(&#39;CogSysThinkDeep&#39;, &#39;CogSysUseful&#39;, &#39;CogSysEnjoy&#39;),
+    intuitiveness = c(&#39;IntSysSimpleUnderstand&#39;, &#39;IntSysEasyStart&#39;, &#39;IntAnalysisConfigure&#39;)
   ),
   
   &quot;4_Factor_A&quot; = list(
-    vis_clarity   = c(&#39;visFaithful&#39;, &#39;visSimpleUnderstand&#39;, &#39;visAppropriate&#39;),
-    sys_retrieval = c(&#39;sysRetrieveInfo&#39;, &#39;visRemember&#39;, &#39;trialError&#39;),
-    cognitive     = c(&#39;sysThinkDeep&#39;, &#39;sysUseful&#39;, &#39;sysEnjoy&#39;, &#39;taskComplete&#39;),
-    intuitiveness = c(&#39;sysSimpleUnderstand&#39;, &#39;sysEasyStart&#39;, &#39;analysisConfigure&#39;)
+    vis_clarity   = c(&#39;VisFaithful&#39;, &#39;VisSimpleUnderstand&#39;, &#39;VisAppropriate&#39;),
+    sys_retrieval = c(&#39;VisSysRetrieveInfo&#39;, &#39;VisRemember&#39;, &#39;VisTrialError&#39;),
+    cognitive     = c(&#39;CogSysThinkDeep&#39;, &#39;CogSysUseful&#39;, &#39;CogSysEnjoy&#39;, &#39;CogTaskComplete&#39;),
+    intuitiveness = c(&#39;IntSysSimpleUnderstand&#39;, &#39;IntSysEasyStart&#39;, &#39;IntAnalysisConfigure&#39;)
   ),
   
   &quot;4_Factor_B&quot; = list(
-    visualization = c(&#39;visFaithful&#39;, &#39;visSimpleUnderstand&#39;, &#39;visAppropriate&#39;, &#39;sysRetrieveInfo&#39;, &#39;visRemember&#39;),
-    task          = c(&#39;trialError&#39;, &#39;taskComplete&#39;),
-    cognitive     = c(&#39;sysThinkDeep&#39;, &#39;sysUseful&#39;, &#39;sysEnjoy&#39;),
-    intuitiveness = c(&#39;sysSimpleUnderstand&#39;, &#39;sysEasyStart&#39;, &#39;analysisConfigure&#39;)
+    visualization = c(&#39;VisFaithful&#39;, &#39;VisSimpleUnderstand&#39;, &#39;VisAppropriate&#39;, &#39;VisSysRetrieveInfo&#39;, &#39;VisRemember&#39;),
+    task          = c(&#39;VisTrialError&#39;, &#39;CogTaskComplete&#39;),
+    cognitive     = c(&#39;CogSysThinkDeep&#39;, &#39;CogSysUseful&#39;, &#39;CogSysEnjoy&#39;),
+    intuitiveness = c(&#39;IntSysSimpleUnderstand&#39;, &#39;IntSysEasyStart&#39;, &#39;IntAnalysisConfigure&#39;)
   )
 )
 
@@ -737,7 +737,7 @@ for (stim in stimuli_letters) {
     }
   }
 }</code></pre>
-<pre><code>## Parallel analysis suggests that the number of factors =  2  and the number of components =  1</code></pre>
+<pre><code>## Parallel analysis suggests that the number of factors =  3  and the number of components =  1</code></pre>
 <pre><code>## Parallel analysis suggests that the number of factors =  3  and the number of components =  1</code></pre>
 <pre><code>## Parallel analysis suggests that the number of factors =  1  and the number of components =  1</code></pre>
 <pre><code>## Parallel analysis suggests that the number of factors =  2  and the number of components =  2</code></pre>
@@ -785,28 +785,28 @@ for (stim in stimuli_letters) {
 <td align="right">4</td>
 <td align="right">2</td>
 <td align="right">5.410</td>
-<td align="right">0.752</td>
+<td align="right">0.706</td>
 <td align="right">0.888</td>
-<td align="right">0.365</td>
+<td align="right">0.359</td>
 <td align="right">0.533</td>
-<td align="right">0.280</td>
+<td align="right">0.274</td>
 <td align="right">0.283</td>
-<td align="right">0.202</td>
+<td align="right">0.201</td>
 </tr>
 <tr class="even">
 <td align="left">Tableau</td>
 <td align="right">46</td>
 <td align="right">13</td>
-<td align="right">2</td>
+<td align="right">3</td>
 <td align="right">1</td>
 <td align="right">4.609</td>
-<td align="right">1.247</td>
+<td align="right">1.239</td>
 <td align="right">1.194</td>
-<td align="right">0.794</td>
+<td align="right">0.778</td>
 <td align="right">0.721</td>
-<td align="right">0.583</td>
+<td align="right">0.577</td>
 <td align="right">0.460</td>
-<td align="right">0.406</td>
+<td align="right">0.420</td>
 </tr>
 <tr class="odd">
 <td align="left">JMP</td>
@@ -815,13 +815,13 @@ for (stim in stimuli_letters) {
 <td align="right">3</td>
 <td align="right">1</td>
 <td align="right">6.006</td>
-<td align="right">1.289</td>
+<td align="right">1.314</td>
 <td align="right">1.267</td>
-<td align="right">0.834</td>
+<td align="right">0.863</td>
 <td align="right">0.808</td>
-<td align="right">0.624</td>
+<td align="right">0.632</td>
 <td align="right">0.334</td>
-<td align="right">0.439</td>
+<td align="right">0.438</td>
 </tr>
 <tr class="even">
 <td align="left">Excel</td>
@@ -830,13 +830,13 @@ for (stim in stimuli_letters) {
 <td align="right">1</td>
 <td align="right">1</td>
 <td align="right">5.935</td>
-<td align="right">1.484</td>
+<td align="right">1.482</td>
 <td align="right">0.785</td>
-<td align="right">0.921</td>
+<td align="right">0.923</td>
 <td align="right">0.730</td>
-<td align="right">0.690</td>
+<td align="right">0.674</td>
 <td align="right">0.418</td>
-<td align="right">0.486</td>
+<td align="right">0.469</td>
 </tr>
 <tr class="odd">
 <td align="left">Data Studio</td>
@@ -845,13 +845,13 @@ for (stim in stimuli_letters) {
 <td align="right">2</td>
 <td align="right">2</td>
 <td align="right">6.396</td>
-<td align="right">1.265</td>
+<td align="right">1.275</td>
 <td align="right">1.442</td>
-<td align="right">0.813</td>
+<td align="right">0.818</td>
 <td align="right">0.363</td>
-<td align="right">0.596</td>
+<td align="right">0.603</td>
 <td align="right">0.346</td>
-<td align="right">0.424</td>
+<td align="right">0.422</td>
 </tr>
 <tr class="even">
 <td align="left">Power BI</td>
@@ -860,13 +860,13 @@ for (stim in stimuli_letters) {
 <td align="right">3</td>
 <td align="right">1</td>
 <td align="right">6.087</td>
-<td align="right">1.294</td>
+<td align="right">1.284</td>
 <td align="right">1.020</td>
-<td align="right">0.813</td>
+<td align="right">0.825</td>
 <td align="right">0.806</td>
-<td align="right">0.603</td>
+<td align="right">0.600</td>
 <td align="right">0.308</td>
-<td align="right">0.429</td>
+<td align="right">0.418</td>
 </tr>
 </tbody>
 </table>
