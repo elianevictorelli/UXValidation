@@ -141,15 +141,15 @@ extract_fit_measures <- function(fit_obj, model_label) {
 ```{r model definitions}
 # 4-Factor Model A (Visualization Clarity + Visualization Retrieval) + Cognitive + Intuitiveness
 
-# 4-Factor Model B (Visualization -  'trialError') +   (Cognitive  - 'taskComplete'), +new factor (trialError + taskComplete) +  Intuitiveness
+# 4-Factor Model B (Visualization -  'VisTrialError') +   (Cognitive  - 'CogTaskComplete'), +new factor (VisTrialError + CogTaskComplete) +  Intuitiveness
 
 # 3-Factor Model A: Our selection of Visualization + Cognitive + Intuitiveness)
 
-# 3-Factor Model B: Our selection of items without trialError item
+# 3-Factor Model B: Our selection of items without VisTrialError item
 
 # 3-Factor Model C:  Our selection of items without taskCompletion item
 
-# 3-Factor Model D:  Our selection of items without trialError and taskCompletion items
+# 3-Factor Model D:  Our selection of items without VisTrialError and taskCompletion items
 
 # 2-Factor Model A: Interface Usability vs. Cognitive Utility
 
@@ -160,59 +160,59 @@ extract_fit_measures <- function(fit_obj, model_label) {
 
 models_factor_specs <- list(
   "1_Factor" = list(
-    general_ux = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 
-                   'visRemember', 'trialError', 'sysThinkDeep', 'sysUseful', 'sysEnjoy', 
-                   'taskComplete', 'sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+    general_ux = c('VisFaithful', 'VisSimpleUnderstand', 'VisAppropriate', 'VisSysRetrieveInfo', 
+                   'VisRemember', 'VisTrialError', 'CogSysThinkDeep', 'CogSysUseful', 'CogSysEnjoy', 
+                   'CogTaskComplete', 'IntSysSimpleUnderstand', 'IntSysEasyStart', 'IntAnalysisConfigure')
   ),
   
   "2_Factor_A" = list(
-    interface_usability = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 
-                            'visRemember', 'trialError', 'sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure'),
-    cognitive_utility   = c('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'taskComplete')
+    interface_usability = c('VisFaithful', 'VisSimpleUnderstand', 'VisAppropriate', 'VisSysRetrieveInfo', 
+                            'VisRemember', 'VisTrialError', 'IntSysSimpleUnderstand', 'IntSysEasyStart', 'IntAnalysisConfigure'),
+    cognitive_utility   = c('CogSysThinkDeep', 'CogSysUseful', 'CogSysEnjoy', 'CogTaskComplete')
   ),
   
   "2_Factor_B" = list(
-    system_experience = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 
-                          'visRemember', 'trialError', 'sysThinkDeep', 'sysUseful', 'sysEnjoy', 'taskComplete'),
-    intuitiveness     = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+    system_experience = c('VisFaithful', 'VisSimpleUnderstand', 'VisAppropriate', 'VisSysRetrieveInfo', 
+                          'VisRemember', 'VisTrialError', 'CogSysThinkDeep', 'CogSysUseful', 'CogSysEnjoy', 'CogTaskComplete'),
+    intuitiveness     = c('IntSysSimpleUnderstand', 'IntSysEasyStart', 'IntAnalysisConfigure')
   ),
   
   "3_Factor_A" = list(
-    visualization = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 'visRemember', 'trialError'),
-    cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'taskComplete'),
-    intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+    visualization = c('VisFaithful', 'VisSimpleUnderstand', 'VisAppropriate', 'VisSysRetrieveInfo', 'VisRemember', 'VisTrialError'),
+    cognitive     = c('CogSysThinkDeep', 'CogSysUseful', 'CogSysEnjoy', 'CogTaskComplete'),
+    intuitiveness = c('IntSysSimpleUnderstand', 'IntSysEasyStart', 'IntAnalysisConfigure')
   ),
   
   "3_Factor_B" = list(
-    visualization = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 'visRemember'),
-    cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'taskComplete'),
-    intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+    visualization = c('VisFaithful', 'VisSimpleUnderstand', 'VisAppropriate', 'VisSysRetrieveInfo', 'VisRemember'),
+    cognitive     = c('CogSysThinkDeep', 'CogSysUseful', 'CogSysEnjoy', 'CogTaskComplete'),
+    intuitiveness = c('IntSysSimpleUnderstand', 'IntSysEasyStart', 'IntAnalysisConfigure')
   ),
   
   "3_Factor_C" = list(
-    visualization = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 'visRemember', 'trialError'),
-    cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy'),
-    intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+    visualization = c('VisFaithful', 'VisSimpleUnderstand', 'VisAppropriate', 'VisSysRetrieveInfo', 'VisRemember', 'VisTrialError'),
+    cognitive     = c('CogSysThinkDeep', 'CogSysUseful', 'CogSysEnjoy'),
+    intuitiveness = c('IntSysSimpleUnderstand', 'IntSysEasyStart', 'IntAnalysisConfigure')
   ),
   
   "3_Factor_D" = list(
-    visualization = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 'visRemember'),
-    cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy'),
-    intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+    visualization = c('VisFaithful', 'VisSimpleUnderstand', 'VisAppropriate', 'VisSysRetrieveInfo', 'VisRemember'),
+    cognitive     = c('CogSysThinkDeep', 'CogSysUseful', 'CogSysEnjoy'),
+    intuitiveness = c('IntSysSimpleUnderstand', 'IntSysEasyStart', 'IntAnalysisConfigure')
   ),
   
   "4_Factor_A" = list(
-    vis_clarity   = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate'),
-    sys_retrieval = c('sysRetrieveInfo', 'visRemember', 'trialError'),
-    cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'taskComplete'),
-    intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+    vis_clarity   = c('VisFaithful', 'VisSimpleUnderstand', 'VisAppropriate'),
+    sys_retrieval = c('VisSysRetrieveInfo', 'VisRemember', 'VisTrialError'),
+    cognitive     = c('CogSysThinkDeep', 'CogSysUseful', 'CogSysEnjoy', 'CogTaskComplete'),
+    intuitiveness = c('IntSysSimpleUnderstand', 'IntSysEasyStart', 'IntAnalysisConfigure')
   ),
   
   "4_Factor_B" = list(
-    visualization = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 'visRemember'),
-    task          = c('trialError', 'taskComplete'),
-    cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy'),
-    intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+    visualization = c('VisFaithful', 'VisSimpleUnderstand', 'VisAppropriate', 'VisSysRetrieveInfo', 'VisRemember'),
+    task          = c('VisTrialError', 'CogTaskComplete'),
+    cognitive     = c('CogSysThinkDeep', 'CogSysUseful', 'CogSysEnjoy'),
+    intuitiveness = c('IntSysSimpleUnderstand', 'IntSysEasyStart', 'IntAnalysisConfigure')
   )
 )
 

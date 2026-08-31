@@ -1,4 +1,4 @@
-id,seed,stimulus,sysEasyStart,sysSimpleUnderstand,analysisConfigure,visRemember,trialError,visSimpleUnderstand,sysRetrieveInfo,visAppropriate,visFaithful,taskComplete,sysEnjoy,sysThinkDeep,sysUseful
+id,seed,stimulus,IntSysEasyStart,IntSysSimpleUnderstand,IntAnalysisConfigure,VisRemember,VisTrialError,VisSimpleUnderstand,VisSysRetrieveInfo,VisAppropriate,VisFaithful,CogTaskComplete,CogSysEnjoy,CogSysThinkDeep,CogSysUseful
 14,1886876404,Power BI,6,5,5,7,5,6,7,6,7,6,6,6,6
 18,823070095,Tableau,7,7,6,6,7,5,5,5,5,7,6,5,6
 23,113523666,JMP,7,7,7,7,7,7,7,7,7,7,7,7,7
