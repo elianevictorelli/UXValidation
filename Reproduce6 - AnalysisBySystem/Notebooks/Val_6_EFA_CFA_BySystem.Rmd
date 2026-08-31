@@ -10,7 +10,6 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
-
 knitr::opts_knit$set(root.dir = getwd())
 
 # Define relative directory paths
@@ -55,12 +54,10 @@ make_corrM <- function(d = NULL, order = NULL, ...) {
   
   if (ncol(d_clean) < 2) return(NULL)
   
-  # Convert to ordered factors while strictly preserving original item names
   orig_names <- colnames(d_clean)
   d_ordered <- as.data.frame(lapply(d_clean, ordered), check.names = FALSE)
   colnames(d_ordered) <- orig_names
   
-  # Compute polychoric correlation matrix using two-step approximation with pairwise deletion
   het <- tryCatch({
     polycor::hetcor(
       d_ordered, 
@@ -75,12 +72,10 @@ make_corrM <- function(d = NULL, order = NULL, ...) {
   corr_matrix <- het$correlations
   dimnames(corr_matrix) <- list(orig_names, orig_names)
   
-  # Smooth matrix if non-positive definite eigenvalues occur in small sub-samples
   if (any(eigen(corr_matrix)$values <= 0)) {
     corr_matrix <- psych::cor.smooth(corr_matrix)
   }
   
-  # Optional matrix reordering
   if (!is.null(order) && length(order) > 0) {
     valid_order <- intersect(order, colnames(corr_matrix))
     if (length(valid_order) > 1) {
@@ -92,9 +87,7 @@ make_corrM <- function(d = NULL, order = NULL, ...) {
 }
 
 # 2. Standardized extraction of CFA fit measures from lavaan objects
-# 2. Standardized extraction of CFA fit measures from lavaan objects (Safe & Robust)
 extract_fit_measures <- function(fit_obj, model_label) {
-  # Default empty row in case of non-convergence
   empty_res <- data.frame(
     Model          = as.character(model_label),
     chisq          = NA_real_,
@@ -122,7 +115,6 @@ extract_fit_measures <- function(fit_obj, model_label) {
   
   if (is.null(fm)) return(empty_res)
   
-  # Extração segura valor por valor sem conflito de dimnames
   res_df <- data.frame(
     Model          = as.character(model_label),
     chisq          = as.numeric(fm["chisq"]),
@@ -144,59 +136,88 @@ extract_fit_measures <- function(fit_obj, model_label) {
 
 ```
 
-## Factor Structure Specifications (1 to 4 Factors)
-
-## Factor Structure Specifications (1 to 4 Factors)
+## Model Factor Definitions & Global Registry
 
 ```{r model definitions}
-# ------------------------------------------------------------------------------
-# 4-Factor Model (Granular: Visual Clarity + System Retrieval + Cognitive + Intuitiveness)
-# ------------------------------------------------------------------------------
-UX_factors_4f <- list(
-  vis_clarity   = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate'),
-  sys_retrieval = c('sysRetrieveInfo', 'visRemember', 'trialError'),
-  cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'tasksCompleteTask'),
-  intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
-)
+# 4-Factor Model A (Visualization Clarity + Visualization Retrieval) + Cognitive + Intuitiveness
 
-# ------------------------------------------------------------------------------
-# 3-Factor Model (Baseline Hypothesized: Visualization + Cognitive + Intuitiveness)
-# ------------------------------------------------------------------------------
-UX_factors_3f <- list(
-  visualization = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 'visRemember', 'trialError'),
-  cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'tasksCompleteTask'),
-  intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
-)
+# 4-Factor Model B (Visualization -  'trialError') +   (Cognitive  - 'taskComplete'), +new factor (trialError + taskComplete) +  Intuitiveness
 
-# ------------------------------------------------------------------------------
-# 2-Factor Model A (Original: Interface Usability vs. Cognitive Utility)
-# ------------------------------------------------------------------------------
-UX_factors_2f_a <- list(
-  interface_usability = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 
-                          'visRemember', 'trialError', 'sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure'),
-  cognitive_utility   = c('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'tasksCompleteTask')
-)
+# 3-Factor Model A: Our selection of Visualization + Cognitive + Intuitiveness)
 
-# ------------------------------------------------------------------------------
+# 3-Factor Model B: Our selection of items without trialError item
+
+# 3-Factor Model C:  Our selection of items without taskCompletion item
+
+# 3-Factor Model D:  Our selection of items without trialError and taskCompletion items
+
+# 2-Factor Model A: Interface Usability vs. Cognitive Utility
+
 # 2-Factor Model B (Alternative: System Experience vs. Intuitiveness)
-# ------------------------------------------------------------------------------
-UX_factors_2f_b <- list(
-  system_experience = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 
-                        'visRemember', 'trialError', 'sysThinkDeep', 'sysUseful', 'sysEnjoy', 'tasksCompleteTask'),
-  intuitiveness     = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+
+# 1-Factor Model: Unidimensional Structure with all items
+
+
+models_factor_specs <- list(
+  "1_Factor" = list(
+    general_ux = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 
+                   'visRemember', 'trialError', 'sysThinkDeep', 'sysUseful', 'sysEnjoy', 
+                   'taskComplete', 'sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+  ),
+  
+  "2_Factor_A" = list(
+    interface_usability = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 
+                            'visRemember', 'trialError', 'sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure'),
+    cognitive_utility   = c('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'taskComplete')
+  ),
+  
+  "2_Factor_B" = list(
+    system_experience = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 
+                          'visRemember', 'trialError', 'sysThinkDeep', 'sysUseful', 'sysEnjoy', 'taskComplete'),
+    intuitiveness     = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+  ),
+  
+  "3_Factor_A" = list(
+    visualization = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 'visRemember', 'trialError'),
+    cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'taskComplete'),
+    intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+  ),
+  
+  "3_Factor_B" = list(
+    visualization = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 'visRemember'),
+    cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'taskComplete'),
+    intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+  ),
+  
+  "3_Factor_C" = list(
+    visualization = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 'visRemember', 'trialError'),
+    cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy'),
+    intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+  ),
+  
+  "3_Factor_D" = list(
+    visualization = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 'visRemember'),
+    cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy'),
+    intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+  ),
+  
+  "4_Factor_A" = list(
+    vis_clarity   = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate'),
+    sys_retrieval = c('sysRetrieveInfo', 'visRemember', 'trialError'),
+    cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'taskComplete'),
+    intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+  ),
+  
+  "4_Factor_B" = list(
+    visualization = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 'visRemember'),
+    task          = c('trialError', 'taskComplete'),
+    cognitive     = c('sysThinkDeep', 'sysUseful', 'sysEnjoy'),
+    intuitiveness = c('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+  )
 )
 
 # ------------------------------------------------------------------------------
-# 1-Factor Model (Unidimensional Baseline)
-# ------------------------------------------------------------------------------
-UX_factors_1f <- list(
-  general_ux = c('visFaithful', 'visSimpleUnderstand', 'visAppropriate', 'sysRetrieveInfo', 
-                 'visRemember', 'trialError', 'sysThinkDeep', 'sysUseful', 'sysEnjoy', 
-                 'tasksCompleteTask', 'sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
-)
-
-# ------------------------------------------------------------------------------
-# Dynamic lavaan syntax generator
+# Build Lavaan Syntax Dynamically
 # ------------------------------------------------------------------------------
 build_syntax <- function(factor_list) {
   lines <- sapply(names(factor_list), function(f_name) {
@@ -205,25 +226,11 @@ build_syntax <- function(factor_list) {
   paste(lines, collapse = "\n")
 }
 
-syntax_1f   <- build_syntax(UX_factors_1f)
-syntax_2f_a <- build_syntax(UX_factors_2f_a)
-syntax_2f_b <- build_syntax(UX_factors_2f_b)
-syntax_3f   <- build_syntax(UX_factors_3f)
-syntax_4f   <- build_syntax(UX_factors_4f)
+cfa_models_list <- lapply(models_factor_specs, build_syntax)
 
-# ------------------------------------------------------------------------------
-# Consolidate Models for CFA Testing Loop
-# ------------------------------------------------------------------------------
-cfa_models_list <- list(
-  "1_Factor"     = syntax_1f,
-  "2_Factor_A"   = syntax_2f_a,  # Usability vs Cognitive
-  "2_Factor_B"   = syntax_2f_b,  # System Experience vs Intuitiveness
-  "3_Factor"     = syntax_3f,
-  "4_Factor"     = syntax_4f
-)
+# Automatic extraction of ALL unique items across all specified models
+columns_to_keep <- sort(unique(unlist(models_factor_specs)))
 
-# Extract all unique items for dataset filtering
-columns_to_keep <- unname(unlist(UX_factors_1f))
 ```
 
 ## Data Loading and Preparation
@@ -233,6 +240,8 @@ stimuli_letters <- c("Tableau", "JMP", "Excel", "Data Studio", "Power BI")
 
 # Load multi-group dataset
 grp_data <- read.csv(file.path(data_dir, "multigroup_ratings.csv"), encoding = "UTF-8")
+
+# Dataset with the complete pool of items for exploratory analyses
 data_items_only <- grp_data %>% dplyr::select(dplyr::all_of(columns_to_keep))
 
 ```
@@ -241,11 +250,9 @@ data_items_only <- grp_data %>% dplyr::select(dplyr::all_of(columns_to_keep))
 
 ```{r polychoric correlations pdf}
 output_corr_pdf <- file.path(generated_plots_dir, "Polychoric_Correlations_Consolidated.pdf")
-
-# Open PDF graphics device with dimensions suited for square matrices
 pdf(output_corr_pdf, width = 11, height = 11)
 
-# 1.1 Pooled Matrix (Full matrix display)
+# 1.1 Pooled Matrix (Full item pool)
 cat("\nGenerating Complete Polychoric Correlation Plot: POOLED_ALL\n")
 c_mat_pooled <- make_corrM(data_items_only)
 
@@ -267,7 +274,7 @@ if (!is.null(c_mat_pooled)) {
   )
 }
 
-# 1.2 Individual Matrices per Stimulus (Full matrix display)
+# 1.2 Individual Matrices per Stimulus
 for (stim in stimuli_letters) {
   cat("Generating Complete Polychoric Correlation Plot for stimulus:", stim, "\n")
   
@@ -301,10 +308,6 @@ for (stim in stimuli_letters) {
 
 dev.off()
 
-cat("\n========================================================================\n")
-cat(" Consolidated Complete Polychoric Correlation Matrices saved to:\n", output_corr_pdf, "\n")
-cat("========================================================================\n\n")
-
 ```
 
 ## 2. Parallel Analysis Consolidation
@@ -312,14 +315,12 @@ cat("========================================================================\n\
 ```{r parallel analysis consolidated}
 all_parallel_results <- data.frame()
 
-# Helper function to compute Parallel Analysis
 extract_pa_row <- function(df_data, sample_name, plot_dir) {
   n_obs <- nrow(df_data)
   c_mat <- make_corrM(df_data)
   
   if (is.null(c_mat) || ncol(c_mat) < 2) return(NULL)
   
-  # Export scree plot to PDF
   pdf_path <- file.path(plot_dir, paste0("ScreePlot_PA-", sample_name, ".pdf"))
   pdf(pdf_path, width = 8, height = 4.5)
   
@@ -340,7 +341,6 @@ extract_pa_row <- function(df_data, sample_name, plot_dir) {
     N_Items                 = ncol(c_mat),
     Suggested_Factors_PA    = pa_res$nfact,
     Suggested_Components_PA = pa_res$ncomp,
-    
     FA_Eigen_Real_F1        = round(pa_res$fa.values[1], 3),
     FA_Eigen_Sim_F1         = round(pa_res$fa.sim[1], 3),
     FA_Eigen_Real_F2        = round(pa_res$fa.values[2], 3),
@@ -355,7 +355,6 @@ extract_pa_row <- function(df_data, sample_name, plot_dir) {
 }
 
 # 2.1 Parallel Analysis on Pooled Data
-cat("\nRunning Parallel Analysis: Pooled Data\n")
 pooled_pa_row <- extract_pa_row(
   df_data     = data_items_only, 
   sample_name = "Pooled_All_Systems", 
@@ -367,8 +366,6 @@ if (!is.null(pooled_pa_row)) {
 
 # 2.2 Parallel Analysis by System
 for (stim in stimuli_letters) {
-  cat("Running Parallel Analysis for stimulus:", stim, "\n")
-  
   stim_data <- grp_data %>%
     dplyr::filter(stimulus == stim) %>%
     dplyr::select(dplyr::all_of(columns_to_keep)) %>%
@@ -383,8 +380,6 @@ for (stim in stimuli_letters) {
     if (!is.null(stim_pa_row)) {
       all_parallel_results <- rbind(all_parallel_results, stim_pa_row)
     }
-  } else {
-    message("Insufficient sample size for stimulus: ", stim)
   }
 }
 
@@ -392,14 +387,12 @@ knitr::kable(all_parallel_results, caption = "Consolidated Parallel Analysis Res
 
 ```
 
-## 3. EFA: Multi-Tab Workbook (Individual Sheets per Factor Solution and Stimulus)
+## 3. EFA: Multi-Tab Workbook
 
 ```{r efa multi-tab excel}
-# Master lists to hold separate tables per factor solution and per stimulus
 efa_loadings_sheets_list <- list()
 consolidated_variance_df <- data.frame()
 
-# Function to run EFA models (1 to 4 factors) for a given dataset
 run_efa_models <- function(df_input, label_prefix) {
   cat("\nFitting EFA Models (1-4 Factors) for:", label_prefix, "\n")
   
@@ -421,13 +414,9 @@ run_efa_models <- function(df_input, label_prefix) {
         rotate   = rot, 
         fm       = "wls"
       )
-    }, error = function(e) {
-      cat("Note: EFA", nf, "factor(s) did not converge for", label_prefix, "\n")
-      NULL
-    })
+    }, error = function(e) NULL)
     
     if (!is.null(efa_fit)) {
-      # 1. Build factor loadings table
       raw_loadings <- unclass(efa_fit$loadings)
       item_names   <- rownames(raw_loadings)
       
@@ -447,9 +436,7 @@ run_efa_models <- function(df_input, label_prefix) {
       
       local_loadings_by_factor[[paste0(nf, "F")]] <- loadings_table
       
-      # 2. Extract variance explained metrics with fixed 4 factor slots
       v_mat <- efa_fit$Vaccounted
-      
       for (r_name in rownames(v_mat)) {
         var_row <- data.frame(
           Sample                   = label_prefix,
@@ -475,7 +462,6 @@ run_efa_models <- function(df_input, label_prefix) {
   }
   
   res_variance <- if (length(local_variance_list) > 0) dplyr::bind_rows(local_variance_list) else NULL
-  
   return(list(loadings_by_factor = local_loadings_by_factor, variance = res_variance))
 }
 
@@ -488,16 +474,15 @@ if (!is.null(pooled_efa$variance)) {
 for (nf in 1:4) {
   nf_tag <- paste0(nf, "F")
   if (!is.null(pooled_efa$loadings_by_factor[[nf_tag]])) {
-    sheet_title <- paste0(nf_tag, "_Pooled")
-    efa_loadings_sheets_list[[sheet_title]] <- pooled_efa$loadings_by_factor[[nf_tag]]
+    efa_loadings_sheets_list[[paste0(nf_tag, "_Pooled")]] <- pooled_efa$loadings_by_factor[[nf_tag]]
   }
 }
 
-# 3.2 Execute EFA per Stimulus and Populate Dedicated Sheets
+# 3.2 Execute EFA per Stimulus
 for (stim in stimuli_letters) {
   stim_data <- grp_data %>% 
     dplyr::filter(stimulus == stim) %>% 
-    dplyr::select(dplyr::all_of(columns_to_keep)) %>%
+    dplyr::select(dplyr::all_of(columns_to_keep)) %>% 
     droplevels()
   
   if (nrow(stim_data) > 10) {
@@ -507,30 +492,24 @@ for (stim in stimuli_letters) {
     }
     
     clean_stim_name <- gsub(" ", "_", stim)
-    
     for (nf in 1:4) {
       nf_tag <- paste0(nf, "F")
       if (!is.null(stim_efa$loadings_by_factor[[nf_tag]])) {
-        sheet_title <- paste0(nf_tag, "_", clean_stim_name)
-        sheet_title <- substr(sheet_title, 1, 31)
+        sheet_title <- substr(paste0(nf_tag, "_", clean_stim_name), 1, 31)
         efa_loadings_sheets_list[[sheet_title]] <- stim_efa$loadings_by_factor[[nf_tag]]
       }
     }
   }
 }
 
-# 3.3 Create and Populate Multi-Tab Excel Workbook
+# 3.3 Save Excel Workbook
 efa_excel_wb <- createWorkbook()
-
-# Sheet 1: Parallel Analysis
 addWorksheet(efa_excel_wb, "Parallel_Analysis")
 writeData(efa_excel_wb, "Parallel_Analysis", all_parallel_results)
 
-# Sheet 2: Consolidated Variance Explained across all solutions and samples
 addWorksheet(efa_excel_wb, "Variance_Explained")
 writeData(efa_excel_wb, "Variance_Explained", consolidated_variance_df)
 
-# Sheets 3+: Dedicated Sheets for each Factor Solution x Stimulus
 for (s_name in names(efa_loadings_sheets_list)) {
   addWorksheet(efa_excel_wb, s_name)
   writeData(efa_excel_wb, s_name, efa_loadings_sheets_list[[s_name]])
@@ -539,15 +518,9 @@ for (s_name in names(efa_loadings_sheets_list)) {
 output_efa_excel <- file.path(generated_data_dir, "EFA_Summary_Consolidated.xlsx")
 saveWorkbook(efa_excel_wb, output_efa_excel, overwrite = TRUE)
 
-cat("\n========================================================================\n")
-cat(" EFA Multi-Tab Workbook saved to:\n", output_efa_excel, "\n")
-cat(" Total worksheets created:", length(names(efa_loadings_sheets_list)) + 2, "\n")
-cat("========================================================================\n\n")
-
 ```
 
-
-## 4. CFA: Multi-Tab Excel Workbook Generation (1 to 4 Factors)
+## 4. CFA: Multi-Model Fit Comparison
 
 ```{r cfa consolidated excel}
 # 4.1 Pooled CFA Models
@@ -559,7 +532,7 @@ for (m_name in names(cfa_models_list)) {
   fit_pooled <- tryCatch({
     lavaan::cfa(
       model   = m_syntax,
-      data    = data_items_only,
+      data    = grp_data,
       missing = "fiml"
     )
   }, error = function(e) NULL)
@@ -611,31 +584,21 @@ for (stim in stimuli_letters) {
 }
 individual_cfa_results <- dplyr::bind_rows(individual_cfa_list)
 
-# 4.4 Build and Save Multi-Tab Excel Workbook for CFA
+# 4.4 Save CFA Results
 cfa_excel_wb <- createWorkbook()
-
-# Tab 1: Pooled Overall
 addWorksheet(cfa_excel_wb, "Pooled_Overall")
 writeData(cfa_excel_wb, "Pooled_Overall", pooled_cfa_results)
 
-# Tab 2: Multigroup
 addWorksheet(cfa_excel_wb, "Multigroup")
 writeData(cfa_excel_wb, "Multigroup", multigroup_cfa_results)
 
-# Tab 3: Individual by Stimulus
 addWorksheet(cfa_excel_wb, "By_Stimulus")
 writeData(cfa_excel_wb, "By_Stimulus", individual_cfa_results)
 
 output_cfa_excel <- file.path(generated_data_dir, "CFA_Model_Fit_Comparison.xlsx")
 saveWorkbook(cfa_excel_wb, output_cfa_excel, overwrite = TRUE)
 
-cat("\n========================================================================\n")
-cat(" CFA Consolidated Multi-Tab Workbook saved to:\n", output_cfa_excel, "\n")
-cat("========================================================================\n\n")
-
 print(knitr::kable(pooled_cfa_results, digits = 3, caption = "CFA Fit Indices (Pooled Data Preview)"))
-```
 
 ```
 
-```
