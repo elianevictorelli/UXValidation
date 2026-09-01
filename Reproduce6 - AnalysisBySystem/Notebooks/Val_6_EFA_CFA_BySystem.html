@@ -912,7 +912,7 @@ for (stim in stimuli_letters) {
 consolidated_variance_df &lt;- data.frame()
 
 run_efa_models &lt;- function(df_input, label_prefix) {
-  cat(&quot;\nFitting EFA Models (1-4 Factors) for:&quot;, label_prefix, &quot;\n&quot;)
+  cat(&quot;\nFitting EFA Models (MinRes, 1-4 Factors) for:&quot;, label_prefix, &quot;\n&quot;)
   
   c_mat &lt;- make_corrM(df_input)
   if (is.null(c_mat)) return(list(loadings_by_factor = list(), variance = NULL))
@@ -930,30 +930,52 @@ run_efa_models &lt;- function(df_input, label_prefix) {
         nfactors = nf, 
         n.obs    = n_obs, 
         rotate   = rot, 
-        fm       = &quot;wls&quot;
+        fm       = &quot;minres&quot;   # Alterado de &quot;wls&quot; para &quot;minres&quot;
       )
     }, error = function(e) NULL)
     
     if (!is.null(efa_fit)) {
+      # 1. Matriz de cargas brutas
       raw_loadings &lt;- unclass(efa_fit$loadings)
-      item_names   &lt;- rownames(raw_loadings)
+      factor_cols  &lt;- paste0(&quot;Loading_F&quot;, 1:nf)
+      colnames(raw_loadings) &lt;- factor_cols
       
-      loadings_table &lt;- data.frame(
-        Item = item_names,
-        stringsAsFactors = FALSE
-      )
+      loadings_df &lt;- as.data.frame(raw_loadings)
+      loadings_df$Item &lt;- rownames(loadings_df)
       
-      for (f_idx in 1:nf) {
-        f_col_name &lt;- paste0(&quot;Loading_F&quot;, f_idx)
-        loadings_table[[f_col_name]] &lt;- round(raw_loadings[item_names, f_idx], 4)
+      # 2. Identificação do fator primário e carga máxima
+      primary_factor_idx &lt;- apply(abs(raw_loadings), 1, which.max)
+      loadings_df$Primary_Factor &lt;- factor_cols[primary_factor_idx]
+      loadings_df$Max_Loading &lt;- mapply(function(r, c) raw_loadings[r, c], 
+                                        seq_len(nrow(raw_loadings)), 
+                                        primary_factor_idx)
+      
+      # 3. Métricas de diagnóstico
+      loadings_df$Communality_h2 &lt;- round(efa_fit$communality[loadings_df$Item], 4)
+      loadings_df$Uniqueness_u2  &lt;- round(efa_fit$uniquenesses[loadings_df$Item], 4)
+      loadings_df$Complexity     &lt;- round(efa_fit$complexity[loadings_df$Item], 4)
+      
+      # 4. Ordenação: Fator Primário e magnitude decrescente
+      loadings_df &lt;- loadings_df[order(loadings_df$Primary_Factor, -abs(loadings_df$Max_Loading)), ]
+      
+      # 5. Organização final de colunas
+      final_cols &lt;- c(&quot;Item&quot;, &quot;Primary_Factor&quot;, &quot;Max_Loading&quot;, factor_cols, 
+                      &quot;Communality_h2&quot;, &quot;Uniqueness_u2&quot;, &quot;Complexity&quot;)
+      loadings_df &lt;- loadings_df[, final_cols]
+      
+      num_cols &lt;- sapply(loadings_df, is.numeric)
+      loadings_df[num_cols] &lt;- round(loadings_df[num_cols], 4)
+      rownames(loadings_df) &lt;- NULL
+      
+      local_loadings_by_factor[[paste0(nf, &quot;F&quot;)]] &lt;- loadings_df
+      
+      # Exportação de CSV avulso ordenado (ex.: 3F Pooled)
+      if (nf == 3 &amp;&amp; label_prefix == &quot;Pooled&quot;) {
+        csv_file &lt;- file.path(generated_data_dir, &quot;efa_promax_factor_loadings_ordered.csv&quot;)
+        write.csv(loadings_df, csv_file, row.names = FALSE, na = &quot;&quot;)
       }
       
-      loadings_table$Communality_h2 &lt;- round(efa_fit$communality[item_names], 4)
-      loadings_table$Uniqueness_u2  &lt;- round(efa_fit$uniquenesses[item_names], 4)
-      loadings_table$Complexity     &lt;- round(efa_fit$complexity[item_names], 4)
-      
-      local_loadings_by_factor[[paste0(nf, &quot;F&quot;)]] &lt;- loadings_table
-      
+      # 6. Extração de variância explicada
       v_mat &lt;- efa_fit$Vaccounted
       for (r_name in rownames(v_mat)) {
         var_row &lt;- data.frame(
@@ -986,7 +1008,7 @@ run_efa_models &lt;- function(df_input, label_prefix) {
 # 3.1 Execute EFA on Pooled Data
 pooled_efa &lt;- run_efa_models(data_items_only, &quot;Pooled&quot;)</code></pre>
 <pre><code>## 
-## Fitting EFA Models (1-4 Factors) for: Pooled</code></pre>
+## Fitting EFA Models (MinRes, 1-4 Factors) for: Pooled</code></pre>
 <pre class="r"><code>if (!is.null(pooled_efa$variance)) {
   consolidated_variance_df &lt;- dplyr::bind_rows(consolidated_variance_df, pooled_efa$variance)
 }
@@ -1022,15 +1044,15 @@ for (stim in stimuli_letters) {
   }
 }</code></pre>
 <pre><code>## 
-## Fitting EFA Models (1-4 Factors) for: Tableau 
-## 
-## Fitting EFA Models (1-4 Factors) for: JMP</code></pre>
+## Fitting EFA Models (MinRes, 1-4 Factors) for: Tableau</code></pre>
 <pre><code>## 
-## Fitting EFA Models (1-4 Factors) for: Excel</code></pre>
+## Fitting EFA Models (MinRes, 1-4 Factors) for: JMP</code></pre>
 <pre><code>## 
-## Fitting EFA Models (1-4 Factors) for: Data Studio</code></pre>
+## Fitting EFA Models (MinRes, 1-4 Factors) for: Excel</code></pre>
 <pre><code>## 
-## Fitting EFA Models (1-4 Factors) for: Power BI</code></pre>
+## Fitting EFA Models (MinRes, 1-4 Factors) for: Data Studio</code></pre>
+<pre><code>## 
+## Fitting EFA Models (MinRes, 1-4 Factors) for: Power BI</code></pre>
 <pre class="r"><code># 3.3 Save Excel Workbook
 efa_excel_wb &lt;- createWorkbook()
 addWorksheet(efa_excel_wb, &quot;Parallel_Analysis&quot;)
