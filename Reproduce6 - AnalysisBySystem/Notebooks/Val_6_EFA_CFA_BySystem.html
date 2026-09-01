@@ -710,15 +710,18 @@ extract_pa_row &lt;- function(df_data, sample_name, plot_dir) {
   pdf_path &lt;- file.path(plot_dir, paste0(&quot;ScreePlot_PA-&quot;, sample_name, &quot;.pdf&quot;))
   pdf(pdf_path, width = 8, height = 4.5)
   
+  
+  set.seed(42) # reproductibility
   pa_res &lt;- psych::fa.parallel(
     c_mat,
     n.obs  = n_obs,
     fa     = &quot;both&quot;,
-    fm     = &quot;wls&quot;,
+    fm     = &quot;minres&quot;,   # changed from wls to minres - the same used in the previous script
     n.iter = 100,
     plot   = TRUE,
-    main   = paste0(&quot;Parallel Analysis Scree Plot - &quot;, sample_name)
+    main   = paste0(&quot;Parallel Analysis Scree Plot (MinRes) - &quot;, sample_name)
   )
+  
   dev.off()
   
   row_data &lt;- data.frame(
@@ -769,7 +772,7 @@ for (stim in stimuli_letters) {
     }
   }
 }</code></pre>
-<pre><code>## Parallel analysis suggests that the number of factors =  2  and the number of components =  1</code></pre>
+<pre><code>## Parallel analysis suggests that the number of factors =  3  and the number of components =  1</code></pre>
 <pre><code>## Parallel analysis suggests that the number of factors =  3  and the number of components =  1</code></pre>
 <pre><code>## Parallel analysis suggests that the number of factors =  1  and the number of components =  1</code></pre>
 <pre><code>## Parallel analysis suggests that the number of factors =  2  and the number of components =  2</code></pre>
@@ -817,28 +820,28 @@ for (stim in stimuli_letters) {
 <td align="right">4</td>
 <td align="right">2</td>
 <td align="right">5.410</td>
-<td align="right">0.791</td>
-<td align="right">0.888</td>
-<td align="right">0.380</td>
-<td align="right">0.533</td>
-<td align="right">0.280</td>
-<td align="right">0.283</td>
-<td align="right">0.204</td>
+<td align="right">0.599</td>
+<td align="right">0.889</td>
+<td align="right">0.343</td>
+<td align="right">0.532</td>
+<td align="right">0.258</td>
+<td align="right">0.282</td>
+<td align="right">0.190</td>
 </tr>
 <tr class="even">
 <td align="left">Tableau</td>
 <td align="right">46</td>
 <td align="right">13</td>
-<td align="right">2</td>
+<td align="right">3</td>
 <td align="right">1</td>
-<td align="right">4.609</td>
-<td align="right">1.248</td>
-<td align="right">1.194</td>
-<td align="right">0.799</td>
-<td align="right">0.721</td>
-<td align="right">0.595</td>
+<td align="right">4.614</td>
+<td align="right">1.264</td>
+<td align="right">1.196</td>
+<td align="right">0.773</td>
+<td align="right">0.720</td>
+<td align="right">0.581</td>
 <td align="right">0.460</td>
-<td align="right">0.424</td>
+<td align="right">0.415</td>
 </tr>
 <tr class="odd">
 <td align="left">JMP</td>
@@ -846,14 +849,14 @@ for (stim in stimuli_letters) {
 <td align="right">13</td>
 <td align="right">3</td>
 <td align="right">1</td>
-<td align="right">6.006</td>
-<td align="right">1.322</td>
-<td align="right">1.267</td>
-<td align="right">0.831</td>
-<td align="right">0.808</td>
-<td align="right">0.628</td>
-<td align="right">0.334</td>
-<td align="right">0.441</td>
+<td align="right">6.044</td>
+<td align="right">1.345</td>
+<td align="right">1.281</td>
+<td align="right">0.836</td>
+<td align="right">0.819</td>
+<td align="right">0.606</td>
+<td align="right">0.380</td>
+<td align="right">0.419</td>
 </tr>
 <tr class="even">
 <td align="left">Excel</td>
@@ -861,14 +864,14 @@ for (stim in stimuli_letters) {
 <td align="right">13</td>
 <td align="right">1</td>
 <td align="right">1</td>
-<td align="right">5.935</td>
-<td align="right">1.465</td>
-<td align="right">0.785</td>
-<td align="right">0.936</td>
-<td align="right">0.730</td>
-<td align="right">0.685</td>
-<td align="right">0.418</td>
-<td align="right">0.465</td>
+<td align="right">5.969</td>
+<td align="right">1.472</td>
+<td align="right">0.816</td>
+<td align="right">0.902</td>
+<td align="right">0.749</td>
+<td align="right">0.681</td>
+<td align="right">0.451</td>
+<td align="right">0.469</td>
 </tr>
 <tr class="odd">
 <td align="left">Data Studio</td>
@@ -876,14 +879,14 @@ for (stim in stimuli_letters) {
 <td align="right">13</td>
 <td align="right">2</td>
 <td align="right">2</td>
-<td align="right">6.396</td>
-<td align="right">1.277</td>
-<td align="right">1.442</td>
-<td align="right">0.825</td>
-<td align="right">0.363</td>
-<td align="right">0.614</td>
-<td align="right">0.346</td>
-<td align="right">0.432</td>
+<td align="right">6.413</td>
+<td align="right">1.289</td>
+<td align="right">1.445</td>
+<td align="right">0.788</td>
+<td align="right">0.375</td>
+<td align="right">0.596</td>
+<td align="right">0.345</td>
+<td align="right">0.428</td>
 </tr>
 <tr class="even">
 <td align="left">Power BI</td>
@@ -891,14 +894,14 @@ for (stim in stimuli_letters) {
 <td align="right">13</td>
 <td align="right">3</td>
 <td align="right">1</td>
-<td align="right">6.087</td>
-<td align="right">1.294</td>
+<td align="right">6.086</td>
+<td align="right">1.312</td>
 <td align="right">1.020</td>
-<td align="right">0.811</td>
+<td align="right">0.826</td>
 <td align="right">0.806</td>
 <td align="right">0.596</td>
-<td align="right">0.308</td>
-<td align="right">0.434</td>
+<td align="right">0.307</td>
+<td align="right">0.422</td>
 </tr>
 </tbody>
 </table>

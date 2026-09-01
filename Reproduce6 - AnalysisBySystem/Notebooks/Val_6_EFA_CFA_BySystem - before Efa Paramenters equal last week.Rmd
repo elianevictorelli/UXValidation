@@ -429,7 +429,7 @@ efa_loadings_sheets_list <- list()
 consolidated_variance_df <- data.frame()
 
 run_efa_models <- function(df_input, label_prefix) {
-  cat("\nFitting EFA Models (MinRes, 1-4 Factors) for:", label_prefix, "\n")
+  cat("\nFitting EFA Models (1-4 Factors) for:", label_prefix, "\n")
   
   c_mat <- make_corrM(df_input)
   if (is.null(c_mat)) return(list(loadings_by_factor = list(), variance = NULL))
@@ -447,52 +447,30 @@ run_efa_models <- function(df_input, label_prefix) {
         nfactors = nf, 
         n.obs    = n_obs, 
         rotate   = rot, 
-        fm       = "minres"   # Alterado de "wls" para "minres"
+        fm       = "wls"
       )
     }, error = function(e) NULL)
     
     if (!is.null(efa_fit)) {
-      # 1. Matriz de cargas brutas
       raw_loadings <- unclass(efa_fit$loadings)
-      factor_cols  <- paste0("Loading_F", 1:nf)
-      colnames(raw_loadings) <- factor_cols
+      item_names   <- rownames(raw_loadings)
       
-      loadings_df <- as.data.frame(raw_loadings)
-      loadings_df$Item <- rownames(loadings_df)
+      loadings_table <- data.frame(
+        Item = item_names,
+        stringsAsFactors = FALSE
+      )
       
-      # 2. Identificação do fator primário e carga máxima
-      primary_factor_idx <- apply(abs(raw_loadings), 1, which.max)
-      loadings_df$Primary_Factor <- factor_cols[primary_factor_idx]
-      loadings_df$Max_Loading <- mapply(function(r, c) raw_loadings[r, c], 
-                                        seq_len(nrow(raw_loadings)), 
-                                        primary_factor_idx)
-      
-      # 3. Métricas de diagnóstico
-      loadings_df$Communality_h2 <- round(efa_fit$communality[loadings_df$Item], 4)
-      loadings_df$Uniqueness_u2  <- round(efa_fit$uniquenesses[loadings_df$Item], 4)
-      loadings_df$Complexity     <- round(efa_fit$complexity[loadings_df$Item], 4)
-      
-      # 4. Ordenação: Fator Primário e magnitude decrescente
-      loadings_df <- loadings_df[order(loadings_df$Primary_Factor, -abs(loadings_df$Max_Loading)), ]
-      
-      # 5. Organização final de colunas
-      final_cols <- c("Item", "Primary_Factor", "Max_Loading", factor_cols, 
-                      "Communality_h2", "Uniqueness_u2", "Complexity")
-      loadings_df <- loadings_df[, final_cols]
-      
-      num_cols <- sapply(loadings_df, is.numeric)
-      loadings_df[num_cols] <- round(loadings_df[num_cols], 4)
-      rownames(loadings_df) <- NULL
-      
-      local_loadings_by_factor[[paste0(nf, "F")]] <- loadings_df
-      
-      # Exportação de CSV avulso ordenado (ex.: 3F Pooled)
-      if (nf == 3 && label_prefix == "Pooled") {
-        csv_file <- file.path(generated_data_dir, "efa_promax_factor_loadings_ordered.csv")
-        write.csv(loadings_df, csv_file, row.names = FALSE, na = "")
+      for (f_idx in 1:nf) {
+        f_col_name <- paste0("Loading_F", f_idx)
+        loadings_table[[f_col_name]] <- round(raw_loadings[item_names, f_idx], 4)
       }
       
-      # 6. Extração de variância explicada
+      loadings_table$Communality_h2 <- round(efa_fit$communality[item_names], 4)
+      loadings_table$Uniqueness_u2  <- round(efa_fit$uniquenesses[item_names], 4)
+      loadings_table$Complexity     <- round(efa_fit$complexity[item_names], 4)
+      
+      local_loadings_by_factor[[paste0(nf, "F")]] <- loadings_table
+      
       v_mat <- efa_fit$Vaccounted
       for (r_name in rownames(v_mat)) {
         var_row <- data.frame(
