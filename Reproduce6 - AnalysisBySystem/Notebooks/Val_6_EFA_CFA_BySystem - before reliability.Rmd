@@ -36,7 +36,6 @@ library(knitr)
 library(corrplot)
 library(RColorBrewer)
 library(openxlsx)
-library(semTools)
 
 ```
 
@@ -133,37 +132,6 @@ extract_fit_measures <- function(fit_obj, model_label) {
   )
   
   return(res_df)
-}
-
-# Função para extrair Alfa, Ômega e AVE dos fatores de um modelo CFA ajustado
-extract_reliability <- function(fit_obj, model_label) {
-  if (is.null(fit_obj) || !is(fit_obj, "lavaan") || !lavInspect(fit_obj, "converged")) {
-    return(NULL)
-  }
-  
-  # semTools::reliability calcula alpha, omega, ave, etc.
-  rel_mat <- tryCatch({
-    semTools::reliability(fit_obj)
-  }, error = function(e) NULL)
-  
-  if (is.null(rel_mat)) return(NULL)
-  
-  # Transforma a matriz em data.frame legível
-  # rel_mat tem linhas como "alpha", "omega", "ave" e colunas sendo os nomes dos fatores
-  rel_df <- as.data.frame(t(rel_mat))
-  rel_df$Factor <- rownames(rel_df)
-  rel_df$Model  <- as.character(model_label)
-  
-  # Seleciona e organiza as colunas principais
-  cols_present <- intersect(c("Model", "Factor", "alpha", "omega", "omega2", "omega3", "ave"), colnames(rel_df))
-  rel_df <- rel_df[, cols_present, drop = FALSE]
-  
-  # Arredondamento numérico
-  num_cols <- sapply(rel_df, is.numeric)
-  rel_df[num_cols] <- round(rel_df[num_cols], 4)
-  
-  rownames(rel_df) <- NULL
-  return(rel_df)
 }
 
 ```
@@ -557,10 +525,6 @@ saveWorkbook(efa_excel_wb, output_efa_excel, overwrite = TRUE)
 ```{r cfa consolidated excel}
 # 4.1 Pooled CFA Models
 pooled_cfa_list <- list()
-pooled_rel_list   <- list()
-
-
-# 4.1 Pooled CFA Models & Reliability
 
 for (m_name in names(cfa_models_list)) {
   m_syntax <- cfa_models_list[[m_name]]
@@ -573,24 +537,15 @@ for (m_name in names(cfa_models_list)) {
     )
   }, error = function(e) NULL)
   
- label_entry <- paste0("Pooled_", m_name) 
- 
-  # Extracting Model Fit
-  pooled_cfa_list[[m_name]] <- extract_fit_measures(fit_pooled, label_entry)
-  
-  # Extracting reliabitlity (Alpha, Omega, AVE)
-  pooled_rel_list[[m_name]] <- extract_reliability(fit_pooled, label_entry)
+  pooled_cfa_list[[m_name]] <- extract_fit_measures(fit_pooled, paste0("Pooled_", m_name))
 }
-
-
 pooled_cfa_results <- dplyr::bind_rows(pooled_cfa_list)
-pooled_rel_results <- dplyr::bind_rows(pooled_rel_list)
 
 # 4.2 Multigroup CFA Models
 multigroup_cfa_list <- list()
-grp_data_clean <- grp_data %>% dplyr::filter(stimulus %in% stimuli_letters) %>% droplevels()  
-  
-  for (m_name in names(cfa_models_list)) {
+grp_data_clean <- grp_data %>% dplyr::filter(stimulus %in% stimuli_letters) %>% droplevels()
+
+for (m_name in names(cfa_models_list)) {
   m_syntax <- cfa_models_list[[m_name]]
   
   fit_mg <- tryCatch({
@@ -606,10 +561,8 @@ grp_data_clean <- grp_data %>% dplyr::filter(stimulus %in% stimuli_letters) %>% 
 }
 multigroup_cfa_results <- dplyr::bind_rows(multigroup_cfa_list)
 
-
-# 4.3 Individual Systems CFA Models & Reliability
+# 4.3 Individual Systems CFA Models
 individual_cfa_list <- list()
-individual_rel_list <- list()
 
 for (stim in stimuli_letters) {
   stim_data <- grp_data %>% dplyr::filter(stimulus == stim) %>% droplevels()
@@ -627,42 +580,25 @@ for (stim in stimuli_letters) {
     
     label_entry <- paste0(stim, "_", m_name)
     individual_cfa_list[[label_entry]] <- extract_fit_measures(fit_indiv, label_entry)
-    individual_rel_list[[label_entry]] <- extract_reliability(fit_indiv, label_entry)
   }
 }
-
 individual_cfa_results <- dplyr::bind_rows(individual_cfa_list)
-individual_rel_results <- dplyr::bind_rows(individual_rel_list)
 
-
-# 4.4 Save Multi-Tab Excel Workbook (Fit + Reliability)
+# 4.4 Save CFA Results
 cfa_excel_wb <- createWorkbook()
+addWorksheet(cfa_excel_wb, "Pooled_Overall")
+writeData(cfa_excel_wb, "Pooled_Overall", pooled_cfa_results)
 
-# Fit Tabs
-addWorksheet(cfa_excel_wb, "Pooled_Fit")
-writeData(cfa_excel_wb, "Pooled_Fit", pooled_cfa_results)
+addWorksheet(cfa_excel_wb, "Multigroup")
+writeData(cfa_excel_wb, "Multigroup", multigroup_cfa_results)
 
-addWorksheet(cfa_excel_wb, "Pooled_Reliability")
-writeData(cfa_excel_wb, "Pooled_Reliability", pooled_rel_results)
-
-addWorksheet(cfa_excel_wb, "Multigroup_Fit")
-writeData(cfa_excel_wb, "Multigroup_Fit", multigroup_cfa_results)
-
-addWorksheet(cfa_excel_wb, "By_Stimulus_Fit")
-writeData(cfa_excel_wb, "By_Stimulus_Fit", individual_cfa_results)
-
-addWorksheet(cfa_excel_wb, "By_Stimulus_Reliability")
-writeData(cfa_excel_wb, "By_Stimulus_Reliability", individual_rel_results)
+addWorksheet(cfa_excel_wb, "By_Stimulus")
+writeData(cfa_excel_wb, "By_Stimulus", individual_cfa_results)
 
 output_cfa_excel <- file.path(generated_data_dir, "CFA_Model_Fit_Comparison.xlsx")
 saveWorkbook(cfa_excel_wb, output_cfa_excel, overwrite = TRUE)
 
-# Preview HTML
-cat("\n--- Pooled Model Reliability (Preview) ---\n")
-print(knitr::kable(pooled_rel_results, digits = 3))
-
 print(knitr::kable(pooled_cfa_results, digits = 3, caption = "CFA Fit Indices (Pooled Data Preview)"))
-
 
 ```
 

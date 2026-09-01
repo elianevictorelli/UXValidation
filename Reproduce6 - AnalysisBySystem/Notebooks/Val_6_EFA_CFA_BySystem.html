@@ -396,7 +396,8 @@ library(lavaan)
 library(knitr)
 library(corrplot)
 library(RColorBrewer)
-library(openxlsx)</code></pre>
+library(openxlsx)
+library(semTools)</code></pre>
 </div>
 <div id="utility-functions" class="section level2">
 <h2>Utility Functions</h2>
@@ -490,6 +491,37 @@ extract_fit_measures &lt;- function(fit_obj, model_label) {
   )
   
   return(res_df)
+}
+
+# Função para extrair Alfa, Ômega e AVE dos fatores de um modelo CFA ajustado
+extract_reliability &lt;- function(fit_obj, model_label) {
+  if (is.null(fit_obj) || !is(fit_obj, &quot;lavaan&quot;) || !lavInspect(fit_obj, &quot;converged&quot;)) {
+    return(NULL)
+  }
+  
+  # semTools::reliability calcula alpha, omega, ave, etc.
+  rel_mat &lt;- tryCatch({
+    semTools::reliability(fit_obj)
+  }, error = function(e) NULL)
+  
+  if (is.null(rel_mat)) return(NULL)
+  
+  # Transforma a matriz em data.frame legível
+  # rel_mat tem linhas como &quot;alpha&quot;, &quot;omega&quot;, &quot;ave&quot; e colunas sendo os nomes dos fatores
+  rel_df &lt;- as.data.frame(t(rel_mat))
+  rel_df$Factor &lt;- rownames(rel_df)
+  rel_df$Model  &lt;- as.character(model_label)
+  
+  # Seleciona e organiza as colunas principais
+  cols_present &lt;- intersect(c(&quot;Model&quot;, &quot;Factor&quot;, &quot;alpha&quot;, &quot;omega&quot;, &quot;omega2&quot;, &quot;omega3&quot;, &quot;ave&quot;), colnames(rel_df))
+  rel_df &lt;- rel_df[, cols_present, drop = FALSE]
+  
+  # Arredondamento numérico
+  num_cols &lt;- sapply(rel_df, is.numeric)
+  rel_df[num_cols] &lt;- round(rel_df[num_cols], 4)
+  
+  rownames(rel_df) &lt;- NULL
+  return(rel_df)
 }</code></pre>
 </div>
 <div id="model-factor-definitions-global-registry" class="section level2">
@@ -737,7 +769,7 @@ for (stim in stimuli_letters) {
     }
   }
 }</code></pre>
-<pre><code>## Parallel analysis suggests that the number of factors =  3  and the number of components =  1</code></pre>
+<pre><code>## Parallel analysis suggests that the number of factors =  2  and the number of components =  1</code></pre>
 <pre><code>## Parallel analysis suggests that the number of factors =  3  and the number of components =  1</code></pre>
 <pre><code>## Parallel analysis suggests that the number of factors =  1  and the number of components =  1</code></pre>
 <pre><code>## Parallel analysis suggests that the number of factors =  2  and the number of components =  2</code></pre>
@@ -785,11 +817,11 @@ for (stim in stimuli_letters) {
 <td align="right">4</td>
 <td align="right">2</td>
 <td align="right">5.410</td>
-<td align="right">0.706</td>
+<td align="right">0.755</td>
 <td align="right">0.888</td>
-<td align="right">0.359</td>
+<td align="right">0.363</td>
 <td align="right">0.533</td>
-<td align="right">0.274</td>
+<td align="right">0.275</td>
 <td align="right">0.283</td>
 <td align="right">0.201</td>
 </tr>
@@ -797,16 +829,16 @@ for (stim in stimuli_letters) {
 <td align="left">Tableau</td>
 <td align="right">46</td>
 <td align="right">13</td>
-<td align="right">3</td>
+<td align="right">2</td>
 <td align="right">1</td>
 <td align="right">4.609</td>
-<td align="right">1.239</td>
+<td align="right">1.244</td>
 <td align="right">1.194</td>
-<td align="right">0.778</td>
+<td align="right">0.806</td>
 <td align="right">0.721</td>
-<td align="right">0.577</td>
+<td align="right">0.592</td>
 <td align="right">0.460</td>
-<td align="right">0.420</td>
+<td align="right">0.410</td>
 </tr>
 <tr class="odd">
 <td align="left">JMP</td>
@@ -815,13 +847,13 @@ for (stim in stimuli_letters) {
 <td align="right">3</td>
 <td align="right">1</td>
 <td align="right">6.006</td>
-<td align="right">1.314</td>
+<td align="right">1.327</td>
 <td align="right">1.267</td>
-<td align="right">0.863</td>
+<td align="right">0.828</td>
 <td align="right">0.808</td>
-<td align="right">0.632</td>
+<td align="right">0.621</td>
 <td align="right">0.334</td>
-<td align="right">0.438</td>
+<td align="right">0.443</td>
 </tr>
 <tr class="even">
 <td align="left">Excel</td>
@@ -830,13 +862,13 @@ for (stim in stimuli_letters) {
 <td align="right">1</td>
 <td align="right">1</td>
 <td align="right">5.935</td>
-<td align="right">1.482</td>
+<td align="right">1.480</td>
 <td align="right">0.785</td>
-<td align="right">0.923</td>
+<td align="right">0.921</td>
 <td align="right">0.730</td>
-<td align="right">0.674</td>
+<td align="right">0.687</td>
 <td align="right">0.418</td>
-<td align="right">0.469</td>
+<td align="right">0.479</td>
 </tr>
 <tr class="odd">
 <td align="left">Data Studio</td>
@@ -845,13 +877,13 @@ for (stim in stimuli_letters) {
 <td align="right">2</td>
 <td align="right">2</td>
 <td align="right">6.396</td>
-<td align="right">1.275</td>
+<td align="right">1.263</td>
 <td align="right">1.442</td>
-<td align="right">0.818</td>
+<td align="right">0.824</td>
 <td align="right">0.363</td>
-<td align="right">0.603</td>
+<td align="right">0.612</td>
 <td align="right">0.346</td>
-<td align="right">0.422</td>
+<td align="right">0.439</td>
 </tr>
 <tr class="even">
 <td align="left">Power BI</td>
@@ -860,13 +892,13 @@ for (stim in stimuli_letters) {
 <td align="right">3</td>
 <td align="right">1</td>
 <td align="right">6.087</td>
-<td align="right">1.284</td>
+<td align="right">1.294</td>
 <td align="right">1.020</td>
-<td align="right">0.825</td>
+<td align="right">0.829</td>
 <td align="right">0.806</td>
-<td align="right">0.600</td>
+<td align="right">0.596</td>
 <td align="right">0.308</td>
-<td align="right">0.418</td>
+<td align="right">0.431</td>
 </tr>
 </tbody>
 </table>
@@ -1016,6 +1048,10 @@ saveWorkbook(efa_excel_wb, output_efa_excel, overwrite = TRUE)</code></pre>
 <h2>4. CFA: Multi-Model Fit Comparison</h2>
 <pre class="r"><code># 4.1 Pooled CFA Models
 pooled_cfa_list &lt;- list()
+pooled_rel_list   &lt;- list()
+
+
+# 4.1 Pooled CFA Models &amp; Reliability
 
 for (m_name in names(cfa_models_list)) {
   m_syntax &lt;- cfa_models_list[[m_name]]
@@ -1028,15 +1064,24 @@ for (m_name in names(cfa_models_list)) {
     )
   }, error = function(e) NULL)
   
-  pooled_cfa_list[[m_name]] &lt;- extract_fit_measures(fit_pooled, paste0(&quot;Pooled_&quot;, m_name))
+ label_entry &lt;- paste0(&quot;Pooled_&quot;, m_name) 
+ 
+  # Extracting Model Fit
+  pooled_cfa_list[[m_name]] &lt;- extract_fit_measures(fit_pooled, label_entry)
+  
+  # Extracting reliabitlity (Alpha, Omega, AVE)
+  pooled_rel_list[[m_name]] &lt;- extract_reliability(fit_pooled, label_entry)
 }
+
+
 pooled_cfa_results &lt;- dplyr::bind_rows(pooled_cfa_list)
+pooled_rel_results &lt;- dplyr::bind_rows(pooled_rel_list)
 
 # 4.2 Multigroup CFA Models
 multigroup_cfa_list &lt;- list()
-grp_data_clean &lt;- grp_data %&gt;% dplyr::filter(stimulus %in% stimuli_letters) %&gt;% droplevels()
-
-for (m_name in names(cfa_models_list)) {
+grp_data_clean &lt;- grp_data %&gt;% dplyr::filter(stimulus %in% stimuli_letters) %&gt;% droplevels()  
+  
+  for (m_name in names(cfa_models_list)) {
   m_syntax &lt;- cfa_models_list[[m_name]]
   
   fit_mg &lt;- tryCatch({
@@ -1052,8 +1097,10 @@ for (m_name in names(cfa_models_list)) {
 }
 multigroup_cfa_results &lt;- dplyr::bind_rows(multigroup_cfa_list)
 
-# 4.3 Individual Systems CFA Models
+
+# 4.3 Individual Systems CFA Models &amp; Reliability
 individual_cfa_list &lt;- list()
+individual_rel_list &lt;- list()
 
 for (stim in stimuli_letters) {
   stim_data &lt;- grp_data %&gt;% dplyr::filter(stimulus == stim) %&gt;% droplevels()
@@ -1071,25 +1118,71 @@ for (stim in stimuli_letters) {
     
     label_entry &lt;- paste0(stim, &quot;_&quot;, m_name)
     individual_cfa_list[[label_entry]] &lt;- extract_fit_measures(fit_indiv, label_entry)
+    individual_rel_list[[label_entry]] &lt;- extract_reliability(fit_indiv, label_entry)
   }
 }
+
 individual_cfa_results &lt;- dplyr::bind_rows(individual_cfa_list)
+individual_rel_results &lt;- dplyr::bind_rows(individual_rel_list)
 
-# 4.4 Save CFA Results
+
+# 4.4 Save Multi-Tab Excel Workbook (Fit + Reliability)
 cfa_excel_wb &lt;- createWorkbook()
-addWorksheet(cfa_excel_wb, &quot;Pooled_Overall&quot;)
-writeData(cfa_excel_wb, &quot;Pooled_Overall&quot;, pooled_cfa_results)
 
-addWorksheet(cfa_excel_wb, &quot;Multigroup&quot;)
-writeData(cfa_excel_wb, &quot;Multigroup&quot;, multigroup_cfa_results)
+# Fit Tabs
+addWorksheet(cfa_excel_wb, &quot;Pooled_Fit&quot;)
+writeData(cfa_excel_wb, &quot;Pooled_Fit&quot;, pooled_cfa_results)
 
-addWorksheet(cfa_excel_wb, &quot;By_Stimulus&quot;)
-writeData(cfa_excel_wb, &quot;By_Stimulus&quot;, individual_cfa_results)
+addWorksheet(cfa_excel_wb, &quot;Pooled_Reliability&quot;)
+writeData(cfa_excel_wb, &quot;Pooled_Reliability&quot;, pooled_rel_results)
+
+addWorksheet(cfa_excel_wb, &quot;Multigroup_Fit&quot;)
+writeData(cfa_excel_wb, &quot;Multigroup_Fit&quot;, multigroup_cfa_results)
+
+addWorksheet(cfa_excel_wb, &quot;By_Stimulus_Fit&quot;)
+writeData(cfa_excel_wb, &quot;By_Stimulus_Fit&quot;, individual_cfa_results)
+
+addWorksheet(cfa_excel_wb, &quot;By_Stimulus_Reliability&quot;)
+writeData(cfa_excel_wb, &quot;By_Stimulus_Reliability&quot;, individual_rel_results)
 
 output_cfa_excel &lt;- file.path(generated_data_dir, &quot;CFA_Model_Fit_Comparison.xlsx&quot;)
 saveWorkbook(cfa_excel_wb, output_cfa_excel, overwrite = TRUE)
 
-print(knitr::kable(pooled_cfa_results, digits = 3, caption = &quot;CFA Fit Indices (Pooled Data Preview)&quot;))</code></pre>
+# Preview HTML
+cat(&quot;\n--- Pooled Model Reliability (Preview) ---\n&quot;)</code></pre>
+<pre><code>## 
+## --- Pooled Model Reliability (Preview) ---</code></pre>
+<pre class="r"><code>print(knitr::kable(pooled_rel_results, digits = 3))</code></pre>
+<pre><code>## 
+## 
+## |Model             |Factor              | alpha| omega| omega2| omega3|
+## |:-----------------|:-------------------|-----:|-----:|------:|------:|
+## |Pooled_1_Factor   |general_ux          | 0.865| 0.872|  0.872|  0.871|
+## |Pooled_2_Factor_A |interface_usability | 0.829| 0.846|  0.846|  0.847|
+## |Pooled_2_Factor_A |cognitive_utility   | 0.727| 0.735|  0.735|  0.732|
+## |Pooled_2_Factor_B |system_experience   | 0.831| 0.835|  0.835|  0.836|
+## |Pooled_2_Factor_B |intuitiveness       | 0.859| 0.861|  0.861|  0.861|
+## |Pooled_3_Factor_A |visualization       | 0.769| 0.776|  0.776|  0.780|
+## |Pooled_3_Factor_A |cognitive           | 0.727| 0.730|  0.730|  0.725|
+## |Pooled_3_Factor_A |intuitiveness       | 0.859| 0.861|  0.861|  0.861|
+## |Pooled_3_Factor_B |visualization       | 0.759| 0.765|  0.765|  0.766|
+## |Pooled_3_Factor_B |cognitive           | 0.727| 0.728|  0.728|  0.721|
+## |Pooled_3_Factor_B |intuitiveness       | 0.859| 0.861|  0.861|  0.861|
+## |Pooled_3_Factor_C |visualization       | 0.768| 0.777|  0.777|  0.781|
+## |Pooled_3_Factor_C |cognitive           | 0.686| 0.715|  0.715|  0.717|
+## |Pooled_3_Factor_C |intuitiveness       | 0.859| 0.861|  0.861|  0.862|
+## |Pooled_3_Factor_D |visualization       | 0.758| 0.766|  0.766|  0.768|
+## |Pooled_3_Factor_D |cognitive           | 0.686| 0.715|  0.715|  0.716|
+## |Pooled_3_Factor_D |intuitiveness       | 0.859| 0.861|  0.861|  0.862|
+## |Pooled_4_Factor_A |vis_clarity         | 0.632| 0.646|  0.646|  0.646|
+## |Pooled_4_Factor_A |sys_retrieval       | 0.616| 0.625|  0.625|  0.630|
+## |Pooled_4_Factor_A |cognitive           | 0.727| 0.730|  0.730|  0.726|
+## |Pooled_4_Factor_A |intuitiveness       | 0.859| 0.861|  0.861|  0.862|
+## |Pooled_4_Factor_B |visualization       | 0.758| 0.765|  0.765|  0.766|
+## |Pooled_4_Factor_B |task                | 0.489| 0.494|  0.494|  0.495|
+## |Pooled_4_Factor_B |cognitive           | 0.686| 0.709|  0.709|  0.709|
+## |Pooled_4_Factor_B |intuitiveness       | 0.859| 0.861|  0.861|  0.861|</code></pre>
+<pre class="r"><code>print(knitr::kable(pooled_cfa_results, digits = 3, caption = &quot;CFA Fit Indices (Pooled Data Preview)&quot;))</code></pre>
 <pre><code>## 
 ## 
 ## Table: CFA Fit Indices (Pooled Data Preview)
