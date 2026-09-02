@@ -493,34 +493,33 @@ extract_fit_measures &lt;- function(fit_obj, model_label) {
   return(res_df)
 }
 
-# Função para extrair Alfa, Ômega e AVE dos fatores de um modelo CFA ajustado
+# Extract Alfa, Ômega and AVE 
+
 extract_reliability &lt;- function(fit_obj, model_label) {
   if (is.null(fit_obj) || !is(fit_obj, &quot;lavaan&quot;) || !lavInspect(fit_obj, &quot;converged&quot;)) {
     return(NULL)
   }
   
-  # semTools::reliability calcula alpha, omega, ave, etc.
   rel_mat &lt;- tryCatch({
     semTools::reliability(fit_obj)
   }, error = function(e) NULL)
   
   if (is.null(rel_mat)) return(NULL)
   
-  # Transforma a matriz em data.frame legível
-  # rel_mat tem linhas como &quot;alpha&quot;, &quot;omega&quot;, &quot;ave&quot; e colunas sendo os nomes dos fatores
+  # Converte a matriz de saída para data.frame
   rel_df &lt;- as.data.frame(t(rel_mat))
   rel_df$Factor &lt;- rownames(rel_df)
   rel_df$Model  &lt;- as.character(model_label)
   
-  # Seleciona e organiza as colunas principais
-  cols_present &lt;- intersect(c(&quot;Model&quot;, &quot;Factor&quot;, &quot;alpha&quot;, &quot;omega&quot;, &quot;omega2&quot;, &quot;omega3&quot;, &quot;ave&quot;), colnames(rel_df))
+  # Mantém as colunas relevantes incluindo a coluna &#39;ave&#39;
+  cols_present &lt;- intersect(c(&quot;Model&quot;, &quot;Factor&quot;, &quot;alpha&quot;, &quot;omega&quot;, &quot;ave&quot;), colnames(rel_df))
   rel_df &lt;- rel_df[, cols_present, drop = FALSE]
   
-  # Arredondamento numérico
+  # Arredondamento
   num_cols &lt;- sapply(rel_df, is.numeric)
   rel_df[num_cols] &lt;- round(rel_df[num_cols], 4)
-  
   rownames(rel_df) &lt;- NULL
+  
   return(rel_df)
 }</code></pre>
 </div>
@@ -1075,9 +1074,7 @@ saveWorkbook(efa_excel_wb, output_efa_excel, overwrite = TRUE)</code></pre>
 pooled_cfa_list &lt;- list()
 pooled_rel_list   &lt;- list()
 
-
 # 4.1 Pooled CFA Models &amp; Reliability
-
 for (m_name in names(cfa_models_list)) {
   m_syntax &lt;- cfa_models_list[[m_name]]
   
@@ -1091,16 +1088,17 @@ for (m_name in names(cfa_models_list)) {
   
  label_entry &lt;- paste0(&quot;Pooled_&quot;, m_name) 
  
-  # Extracting Model Fit
+# Extracting Model Fit
   pooled_cfa_list[[m_name]] &lt;- extract_fit_measures(fit_pooled, label_entry)
   
   # Extracting reliabitlity (Alpha, Omega, AVE)
   pooled_rel_list[[m_name]] &lt;- extract_reliability(fit_pooled, label_entry)
 }
 
-
 pooled_cfa_results &lt;- dplyr::bind_rows(pooled_cfa_list)
 pooled_rel_results &lt;- dplyr::bind_rows(pooled_rel_list)
+
+
 
 # 4.2 Multigroup CFA Models
 multigroup_cfa_list &lt;- list()
@@ -1161,6 +1159,9 @@ writeData(cfa_excel_wb, &quot;Pooled_Fit&quot;, pooled_cfa_results)
 addWorksheet(cfa_excel_wb, &quot;Pooled_Reliability&quot;)
 writeData(cfa_excel_wb, &quot;Pooled_Reliability&quot;, pooled_rel_results)
 
+addWorksheet(cfa_excel_wb, &quot;Pooled_Reliability_AVE&quot;)
+writeData(cfa_excel_wb, &quot;Pooled_Reliability_AVE&quot;, pooled_rel_results)
+
 addWorksheet(cfa_excel_wb, &quot;Multigroup_Fit&quot;)
 writeData(cfa_excel_wb, &quot;Multigroup_Fit&quot;, multigroup_cfa_results)
 
@@ -1180,33 +1181,33 @@ cat(&quot;\n--- Pooled Model Reliability (Preview) ---\n&quot;)</code></pre>
 <pre class="r"><code>print(knitr::kable(pooled_rel_results, digits = 3))</code></pre>
 <pre><code>## 
 ## 
-## |Model             |Factor              | alpha| omega| omega2| omega3|
-## |:-----------------|:-------------------|-----:|-----:|------:|------:|
-## |Pooled_1_Factor   |general_ux          | 0.865| 0.872|  0.872|  0.871|
-## |Pooled_2_Factor_A |interface_usability | 0.829| 0.846|  0.846|  0.847|
-## |Pooled_2_Factor_A |cognitive_utility   | 0.727| 0.735|  0.735|  0.732|
-## |Pooled_2_Factor_B |system_experience   | 0.831| 0.835|  0.835|  0.836|
-## |Pooled_2_Factor_B |intuitiveness       | 0.859| 0.861|  0.861|  0.861|
-## |Pooled_3_Factor_A |visualization       | 0.769| 0.776|  0.776|  0.780|
-## |Pooled_3_Factor_A |cognitive           | 0.727| 0.730|  0.730|  0.725|
-## |Pooled_3_Factor_A |intuitiveness       | 0.859| 0.861|  0.861|  0.861|
-## |Pooled_3_Factor_B |visualization       | 0.759| 0.765|  0.765|  0.766|
-## |Pooled_3_Factor_B |cognitive           | 0.727| 0.728|  0.728|  0.721|
-## |Pooled_3_Factor_B |intuitiveness       | 0.859| 0.861|  0.861|  0.861|
-## |Pooled_3_Factor_C |visualization       | 0.768| 0.777|  0.777|  0.781|
-## |Pooled_3_Factor_C |cognitive           | 0.686| 0.715|  0.715|  0.717|
-## |Pooled_3_Factor_C |intuitiveness       | 0.859| 0.861|  0.861|  0.862|
-## |Pooled_3_Factor_D |visualization       | 0.758| 0.766|  0.766|  0.768|
-## |Pooled_3_Factor_D |cognitive           | 0.686| 0.715|  0.715|  0.716|
-## |Pooled_3_Factor_D |intuitiveness       | 0.859| 0.861|  0.861|  0.862|
-## |Pooled_4_Factor_A |vis_clarity         | 0.632| 0.646|  0.646|  0.646|
-## |Pooled_4_Factor_A |sys_retrieval       | 0.616| 0.625|  0.625|  0.630|
-## |Pooled_4_Factor_A |cognitive           | 0.727| 0.730|  0.730|  0.726|
-## |Pooled_4_Factor_A |intuitiveness       | 0.859| 0.861|  0.861|  0.862|
-## |Pooled_4_Factor_B |visualization       | 0.758| 0.765|  0.765|  0.766|
-## |Pooled_4_Factor_B |task                | 0.489| 0.494|  0.494|  0.495|
-## |Pooled_4_Factor_B |cognitive           | 0.686| 0.709|  0.709|  0.709|
-## |Pooled_4_Factor_B |intuitiveness       | 0.859| 0.861|  0.861|  0.861|</code></pre>
+## |Model             |Factor              | alpha| omega|
+## |:-----------------|:-------------------|-----:|-----:|
+## |Pooled_1_Factor   |general_ux          | 0.865| 0.872|
+## |Pooled_2_Factor_A |interface_usability | 0.829| 0.846|
+## |Pooled_2_Factor_A |cognitive_utility   | 0.727| 0.735|
+## |Pooled_2_Factor_B |system_experience   | 0.831| 0.835|
+## |Pooled_2_Factor_B |intuitiveness       | 0.859| 0.861|
+## |Pooled_3_Factor_A |visualization       | 0.769| 0.776|
+## |Pooled_3_Factor_A |cognitive           | 0.727| 0.730|
+## |Pooled_3_Factor_A |intuitiveness       | 0.859| 0.861|
+## |Pooled_3_Factor_B |visualization       | 0.759| 0.765|
+## |Pooled_3_Factor_B |cognitive           | 0.727| 0.728|
+## |Pooled_3_Factor_B |intuitiveness       | 0.859| 0.861|
+## |Pooled_3_Factor_C |visualization       | 0.768| 0.777|
+## |Pooled_3_Factor_C |cognitive           | 0.686| 0.715|
+## |Pooled_3_Factor_C |intuitiveness       | 0.859| 0.861|
+## |Pooled_3_Factor_D |visualization       | 0.758| 0.766|
+## |Pooled_3_Factor_D |cognitive           | 0.686| 0.715|
+## |Pooled_3_Factor_D |intuitiveness       | 0.859| 0.861|
+## |Pooled_4_Factor_A |vis_clarity         | 0.632| 0.646|
+## |Pooled_4_Factor_A |sys_retrieval       | 0.616| 0.625|
+## |Pooled_4_Factor_A |cognitive           | 0.727| 0.730|
+## |Pooled_4_Factor_A |intuitiveness       | 0.859| 0.861|
+## |Pooled_4_Factor_B |visualization       | 0.758| 0.765|
+## |Pooled_4_Factor_B |task                | 0.489| 0.494|
+## |Pooled_4_Factor_B |cognitive           | 0.686| 0.709|
+## |Pooled_4_Factor_B |intuitiveness       | 0.859| 0.861|</code></pre>
 <pre class="r"><code>print(knitr::kable(pooled_cfa_results, digits = 3, caption = &quot;CFA Fit Indices (Pooled Data Preview)&quot;))</code></pre>
 <pre><code>## 
 ## 
