@@ -234,7 +234,7 @@ loadings_df[, factor_cols] <- round(loadings_df[, factor_cols], 3)
 loadings_df$Max_Loading <- round(loadings_df$Max_Loading, 3)
 
 
-# --- 2. EXPORT ALL TABLES TO ../Data ---
+
 
 output_dir <- file.path("..", "Data_Analysis")
 if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
