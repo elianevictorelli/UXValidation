@@ -113,8 +113,8 @@ threshold <- 0.025
 #files_to_process <- paste0("ratings-","stimulus", ".csv")#used to collaps file with stimulus
 
 
-# Target single dataset containing NAs
-files_to_process <- c("Reproduce0 - Colapse input data/Data/multigroup_ratings-withNAs-withoutAttFails.csv")
+# Target single prepared dataset containing NAs - 
+files_to_process <- c("Reproduce0 - Colapse input data/Data/ux_ratings.csv")
 
 getwd()
 for (f in files_to_process) {
