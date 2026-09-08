@@ -1,32 +1,34 @@
+---
+title: "Unified Reliability Analysis: SUS and UEQ-S"
+output:
+  html_document:
+    toc: true
+    theme: readable
+---
+
+
+
+```{r setup, include=FALSE}
 # ------------------------------------------------------------------------------
 # R Script: Unified Reliability Analysis for SUS and UEQ-S
 # Dynamic Path Resolution & Single CSV Output Export
 # Output: Data_Analysis/unified_reliability_results.csv
 # ------------------------------------------------------------------------------
 
-# 1. Install and load required packages
-if (!require("psych")) install.packages("psych")
-if (!require("tidyverse")) install.packages("tidyverse")
-
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 library(psych)
 library(tidyverse)
+library(knitr)
 
-# Automatically set working directory to script location if running in RStudio
-if (requireNamespace("rstudioapi", quietly = TRUE) && rstudioapi::isAvailable()) {
-  setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-}
-
-# Resolve directory structure (Notebooks vs Root)
-if (basename(getwd()) == "Notebooks") {
-  data_dir   <- "../Data"
-  output_dir <- "../Data_Analysis"
-} else {
-  data_dir   <- "Data"
-  output_dir <- "Data_Analysis"
-}
+# Se o Rmd estiver dentro de uma pasta (ex: Notebooks/ ou Scripts/), use "../Data":
+data_dir   <- if (dir.exists("../Data")) "../Data" else "Data"
+output_dir <- if (dir.exists("../Data_Analysis") || dir.exists("../Data")) "../Data_Analysis" else "Data_Analysis"
 
 if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+```
+## Reliability Analysis
 
+```{r reliability-analysis}
 # ==============================================================================
 # SECTION 1: SYSTEM USABILITY SCALE (SUS) RELIABILITY ANALYSIS
 # ==============================================================================
@@ -137,6 +139,13 @@ if (file.exists(ueqs_input_path)) {
   ueqs_item_diag <- NULL
 }
 
+```
+
+
+```{r export-and-diagnostics, echo=TRUE}
+
+## Export and Summary Diagnostics
+
 # ==============================================================================
 # SECTION 3: SINGLE CONSOLIDATED CSV EXPORT
 # ==============================================================================
@@ -146,24 +155,21 @@ combined_diagnostics <- bind_rows(sus_item_diag, ueqs_item_diag)
 
 output_csv_path <- file.path(output_dir, "unified_reliability_results.csv")
 
-# Open file connection to write both sections into one single CSV file
 file_conn <- file(output_csv_path, open = "wt")
-
 writeLines("=== RELIABILITY SUMMARY OVERVIEW ===", file_conn)
 write.csv(combined_summary, file_conn, row.names = FALSE)
 
 writeLines("\n=== ITEM-LEVEL DIAGNOSTICS (ALPHA IF DROPPED) ===", file_conn)
 write.csv(combined_diagnostics, file_conn, row.names = FALSE)
+close(file_conn)
 
-close(file_conn) 
+# HTML Exibition:
+if (!is.null(combined_summary)) {
+  kable(combined_summary, caption = "Unified Reliability Analysis Summary")
+}
 
-cat("\n==================================================\n")
-cat("       UNIFIED RELIABILITY ANALYSIS SUMMARY       \n")
-cat("==================================================\n")
-print(combined_summary)
+if (!is.null(combined_diagnostics)) {
+  kable(combined_diagnostics, caption = "Unified Item-Level Diagnostics (Alpha If Dropped)")
+}
+```
 
-cat("\n--> UNIFIED ITEM-LEVEL DIAGNOSTICS <--\n")
-print(combined_diagnostics)
-
-cat("\n[SUCCESS] Single consolidated CSV successfully saved to:\n")
-cat(" Path:", output_csv_path, "\n")
