@@ -155,7 +155,7 @@ write.csv(combined_summary, file_conn, row.names = FALSE)
 writeLines("\n=== ITEM-LEVEL DIAGNOSTICS (ALPHA IF DROPPED) ===", file_conn)
 write.csv(combined_diagnostics, file_conn, row.names = FALSE)
 
-close(file_conn)
+close(file_conn) 
 
 cat("\n==================================================\n")
 cat("       UNIFIED RELIABILITY ANALYSIS SUMMARY       \n")
