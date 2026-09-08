@@ -1,12 +1,29 @@
-# 1. Defining function
+---
+title: "Category Collapsing for Low-Frequency Likert Items"
+output:
+  html_document:
+    toc: true
+    theme: readable
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = TRUE
+)
 
-collapse_logic <- function(file_name) {
+library(knitr)
+library(dplyr)
+```
 
-  out_dir <- "Reproduce0 - Colapse input data/Data_Analysis"
+## 1. Defining Function
+
+```{r define-function}
+collapse_logic <- function(file_name, threshold = 0.025, out_dir = "../Data_Analysis") {
+  
   if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
   
-
   base_file   <- basename(file_name)
   output_name <- gsub(".csv", "_lowfreqcollapsed.csv", base_file)
   output_path <- file.path(out_dir, output_name)
@@ -14,35 +31,29 @@ collapse_logic <- function(file_name) {
   log_name    <- gsub(".csv", "_changes_made.csv", base_file)
   log_path    <- file.path(out_dir, log_name)
   
- 
   if (!file.exists(file_name)) {
-    message("--- File not fount: ", file_name)
+    message("--- File not found: ", file_name)
     return(NULL)
   }
   
   df_mod <- read.csv(file_name, check.names = FALSE)
-  items <- names(df_mod)[sapply(df_mod, is.numeric)]
+  message("--- Processing: ", file_name)
   
-  message("---Porcessing: ", file_name)
-  changes_made <- 0
-  
-
+  # Ignore id and non-item columns
   items <- setdiff(names(df_mod), c("id", "seed", "stimulus"))
   
- 
   fusion_log <- data.frame(
-    item           = character(),
-    origem         = numeric(),
-    destino        = numeric(),
-    prop_original  = numeric(),
-    n_casos        = numeric(),
+    item         = character(),
+    from         = numeric(),
+    to           = numeric(),
+    prop         = numeric(),
+    num_cases    = numeric(),
     stringsAsFactors = FALSE
   )
   
   changes_made <- 0
   
   for (item in items) {
-    # Ignore id and non numeric columns
     if (item == "id" || !is.numeric(df_mod[[item]])) next
     
     repeat {
@@ -65,7 +76,7 @@ collapse_logic <- function(file_name) {
       c_left  <- if (!is.na(left_val)) counts[as.character(left_val)] else -1
       c_right <- if (!is.na(right_val)) counts[as.character(right_val)] else -1
       
-      # criteria for selecting the best neighbor
+      # Criteria for selecting the best neighbor
       if (!is.na(left_val) && !is.na(right_val)) {
         destination <- if (c_left >= c_right) left_val else right_val
       } else if (!is.na(left_val)) {
@@ -76,47 +87,64 @@ collapse_logic <- function(file_name) {
         break
       }
       
-      # registering 
+      # Registering change
       n_casos_target <- as.numeric(counts[as.character(target)])
       prop_target    <- as.numeric(props[as.character(target)])
       
       fusion_log <- rbind(
         fusion_log,
         data.frame(
-          item        = item,
-          from       = target,
-          to         = destination,
-          prop       = round(prop_target, 4),
-          num_cases       = n_casos_target,
+          item      = item,
+          from      = target,
+          to        = destination,
+          prop      = round(prop_target, 4),
+          num_cases = n_casos_target,
           stringsAsFactors = FALSE
         )
       )
       
-      # substituting
+      # Substituting value
       df_mod[[item]][df_mod[[item]] == target] <- destination
       changes_made <- changes_made + 1
     }
   }
   
-  
-  print("beforeWriting")
-  
   write.csv(df_mod, output_path, row.names = FALSE)
-  write.csv(fusion_log,  log_path, row.names = FALSE)
-  message("DONE: Save in ", output_name, " (Total: ", changes_made, ")")
-} # 
-
-# 2
-likert_scale <- c(1, 2, 3, 4, 5, 6, 7)
-threshold <- 0.025
-#files_to_process <- paste0("ratings-", 1:6, ".csv") #used to collaps main files
-#files_to_process <- paste0("ratings-","stimulus", ".csv")#used to collaps file with stimulus
-
-
-# Target single prepared dataset containing NAs - 
-files_to_process <- c("Reproduce0 - Colapse input data/Data/ux_ratings.csv")
-
-getwd()
-for (f in files_to_process) {
-  collapse_logic(f)
+  write.csv(fusion_log, log_path, row.names = FALSE)
+  message("DONE: Saved in ", output_path, " (Total changes: ", changes_made, ")")
+  
+  return(list(log = fusion_log, changes = changes_made))
 }
+```
+
+## 2. Execution
+
+```{r run-collapse}
+threshold_val <- 0.025
+
+# Caminho relativo direto: se o Rmd está em uma subpasta (ex: Scripts/ ou Reports/),
+# "../Data" aponta corretamente para a pasta Data irmã:
+files_to_process <- c("../Data/ux_ratings.csv")
+
+results_list <- list()
+
+for (f in files_to_process) {
+  results_list[[f]] <- collapse_logic(f, threshold = threshold_val, out_dir = "../Data_Analysis")
+}
+```
+
+## 3. Summary of Collapsed Categories
+
+```{r show-log, echo=FALSE}
+all_logs <- bind_rows(lapply(results_list, function(res) res$log))
+
+if (!is.null(all_logs) && nrow(all_logs) > 0) {
+  kable(
+    all_logs,
+    caption = "Merged Categories (Proportion <= 2.5%)",
+    col.names = c("Item", "Original Value", "Merged Into", "Proportion", "Cases (N)")
+  )
+} else {
+  cat("**No categories required collapsing or the input file was not found.**")
+}
+```
