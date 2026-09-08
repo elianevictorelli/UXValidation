@@ -16,7 +16,7 @@ collapse_logic <- function(file_name) {
   
  
   if (!file.exists(file_name)) {
-    message("--- Arquivo não encontrado: ", file_name)
+    message("--- File not fount: ", file_name)
     return(NULL)
   }
   
@@ -53,7 +53,7 @@ collapse_logic <- function(file_name) {
       low_freq_cats <- as.numeric(names(props[props <= threshold]))
       if (length(low_freq_cats) == 0) break
       
-      # Escala com categorias reais ativas
+      # Scale with active categories
       active_scale <- sort(as.numeric(names(counts)))
       
       target <- low_freq_cats[1]
@@ -65,7 +65,7 @@ collapse_logic <- function(file_name) {
       c_left  <- if (!is.na(left_val)) counts[as.character(left_val)] else -1
       c_right <- if (!is.na(right_val)) counts[as.character(right_val)] else -1
       
-      # Critério de desempate e escolha do vizinho mais populoso
+      # criteria for selecting the best neighbor
       if (!is.na(left_val) && !is.na(right_val)) {
         destination <- if (c_left >= c_right) left_val else right_val
       } else if (!is.na(left_val)) {
@@ -76,23 +76,23 @@ collapse_logic <- function(file_name) {
         break
       }
       
-      # REGISTRO NO LOG
+      # registering 
       n_casos_target <- as.numeric(counts[as.character(target)])
       prop_target    <- as.numeric(props[as.character(target)])
       
       fusion_log <- rbind(
         fusion_log,
         data.frame(
-          item          = item,
-          origem        = target,
-          destino       = destination,
-          prop_original = round(prop_target, 4),
-          n_casos       = n_casos_target,
+          item        = item,
+          from       = target,
+          to         = destination,
+          prop       = round(prop_target, 4),
+          num_cases       = n_casos_target,
           stringsAsFactors = FALSE
         )
       )
       
-      # Executa a substituição
+      # substituting
       df_mod[[item]][df_mod[[item]] == target] <- destination
       changes_made <- changes_made + 1
     }
