@@ -607,14 +607,7 @@ select_all_variables &lt;- function (dataset, col_list) {
 <p><a href="https://lavaan.ugent.be/tutorial/groups.html" class="uri">https://lavaan.ugent.be/tutorial/groups.html</a></p>
 <pre class="r"><code>#we retrieve our model from EFA conducted on all data
 
-this_model &lt;- &quot;Tested_model&quot;
-## best items selected on reliability measures only
-
-#UX_factors &lt;- list(
-#  understand = list(&quot;obvious&quot;,&quot;represent&quot;,&quot;understandEasi&quot;),
-#  layout = list(&quot;messi&quot;, &quot;crowd&quot;,&quot;distract&quot;),
-#  dataRead = list(&quot;inform&quot;,&quot;identifi&quot;,&quot;find&quot;),
-#  dataFeat = list(&quot;visibl&quot;,&quot;see&quot;)
+this_model &lt;- &quot;Tested_model&quot; #model used in the validation survey
 
 #UX_factors &lt;- list(
 #  visualization = list(&#39;P106&#39;,&#39;P089&#39;,&#39;P098&#39;,&#39;P097&#39;, &#39;P022A&#39;,&#39;P067&#39;),
@@ -624,9 +617,9 @@ this_model &lt;- &quot;Tested_model&quot;
 
 
 UX_factors &lt;- list(
-  visualization = list(&#39;visFaithful&#39;,&#39;visSimpleUnderstand&#39;,&#39;visAppropriate&#39;,&#39;sysRetrieveInfo&#39;, &#39;visRemember&#39;,&#39;trialError&#39;),
-  cognitive = list(&#39;sysThinkDeep&#39;, &#39;sysUseful&#39;, &#39;sysEnjoy&#39;, &#39;tasksCompleteTask&#39;),
-  intuitiveness = list(&#39;sysSimpleUnderstand&#39;, &#39;sysEasyStart&#39;, &#39;analysisConfigure&#39;)
+  visualization = list(&#39;VisFaithful&#39;, &#39;VisSimpleUnderstand&#39;, &#39;VisAppropriate&#39;, &#39;VisSysRetrieveInfo&#39;, &#39;VisRemember&#39;, &#39;VisTrialError&#39;),
+  cognitive = list(&#39;CogSysThinkDeep&#39;, &#39;CogSysUseful&#39;, &#39;CogSysEnjoy&#39;, &#39;CogTaskComplete&#39;),
+  intuitiveness = list(&#39;IntSysSimpleUnderstand&#39;, &#39;IntSysEasyStart&#39;, &#39;IntAnalysisConfigure&#39;)
 )
 
 
@@ -687,85 +680,85 @@ screen for missing values</h2>
 ## 
 ##     ==========================================</code></pre>
 <pre class="r"><code>describe(data)</code></pre>
-<pre><code>##                     vars   n         mean           sd       median
-## id                     1 226 4.421700e+02       390.12        328.5
-## seed                   2 226 1.096802e+09 598607530.40 1089913579.0
-## sysEasyStart           3 226 5.470000e+00         1.25          6.0
-## sysSimpleUnderstand    4 226 5.630000e+00         1.14          6.0
-## analysisConfigure      5 226 5.480000e+00         1.18          6.0
-## visRemember            6 226 5.980000e+00         0.83          6.0
-## trialError             7 225 5.550000e+00         1.05          6.0
-## visSimpleUnderstand    8 226 6.080000e+00         0.83          6.0
-## sysRetrieveInfo        9 226 6.050000e+00         0.81          6.0
-## visAppropriate        10 226 6.200000e+00         0.63          6.0
-## visFaithful           11 224 6.290000e+00         0.62          6.0
-## tasksCompleteTask     12 225 6.140000e+00         0.78          6.0
-## sysEnjoy              13 226 5.950000e+00         0.96          6.0
-## sysThinkDeep          14 225 5.760000e+00         1.07          6.0
-## sysUseful             15 226 6.420000e+00         0.65          7.0
-##                          trimmed          mad     min        max      range
-## id                  4.117100e+02       406.23       7       1135       1128
-## seed                1.101878e+09 743566611.48 3864603 2144449168 2140584565
-## sysEasyStart        5.620000e+00         1.48       2          7          5
-## sysSimpleUnderstand 5.770000e+00         1.48       2          7          5
-## analysisConfigure   5.610000e+00         1.48       2          7          5
-## visRemember         6.040000e+00         1.48       4          7          3
-## trialError          5.620000e+00         1.48       3          7          4
-## visSimpleUnderstand 6.150000e+00         1.48       4          7          3
-## sysRetrieveInfo     6.110000e+00         1.48       4          7          3
-## visAppropriate      6.250000e+00         0.00       5          7          2
-## visFaithful         6.350000e+00         0.00       5          7          2
-## tasksCompleteTask   6.210000e+00         1.48       4          7          3
-## sysEnjoy            6.060000e+00         1.48       3          7          4
-## sysThinkDeep        5.870000e+00         1.48       3          7          4
-## sysUseful           6.520000e+00         0.00       5          7          2
-##                      skew kurtosis          se
-## id                   0.55    -1.20       25.95
-## seed                -0.06    -1.09 39818780.61
-## sysEasyStart        -0.97     0.44        0.08
-## sysSimpleUnderstand -1.23     1.53        0.08
-## analysisConfigure   -1.03     0.79        0.08
-## visRemember         -0.52    -0.28        0.06
-## trialError          -0.49    -0.22        0.07
-## visSimpleUnderstand -0.61    -0.22        0.05
-## sysRetrieveInfo     -0.49    -0.43        0.05
-## visAppropriate      -0.18    -0.61        0.04
-## visFaithful         -0.29    -0.67        0.04
-## tasksCompleteTask   -0.63    -0.06        0.05
-## sysEnjoy            -1.00     1.03        0.06
-## sysThinkDeep        -0.70    -0.09        0.07
-## sysUseful           -0.69    -0.58        0.04</code></pre>
+<pre><code>##                        vars   n         mean           sd       median
+## id                        1 226 4.421700e+02       390.12        328.5
+## seed                      2 226 1.096802e+09 598607530.40 1089913579.0
+## IntSysEasyStart           3 226 5.470000e+00         1.25          6.0
+## IntSysSimpleUnderstand    4 226 5.630000e+00         1.14          6.0
+## IntAnalysisConfigure      5 226 5.480000e+00         1.18          6.0
+## VisRemember               6 226 5.980000e+00         0.83          6.0
+## VisTrialError             7 225 5.550000e+00         1.05          6.0
+## VisSimpleUnderstand       8 226 6.080000e+00         0.83          6.0
+## VisSysRetrieveInfo        9 226 6.050000e+00         0.81          6.0
+## VisAppropriate           10 226 6.200000e+00         0.63          6.0
+## VisFaithful              11 224 6.290000e+00         0.62          6.0
+## CogTaskComplete          12 225 6.140000e+00         0.78          6.0
+## CogSysEnjoy              13 226 5.950000e+00         0.96          6.0
+## CogSysThinkDeep          14 225 5.760000e+00         1.07          6.0
+## CogSysUseful             15 226 6.420000e+00         0.65          7.0
+##                             trimmed          mad     min        max      range
+## id                     4.117100e+02       406.23       7       1135       1128
+## seed                   1.101878e+09 743566611.48 3864603 2144449168 2140584565
+## IntSysEasyStart        5.620000e+00         1.48       2          7          5
+## IntSysSimpleUnderstand 5.770000e+00         1.48       2          7          5
+## IntAnalysisConfigure   5.610000e+00         1.48       2          7          5
+## VisRemember            6.040000e+00         1.48       4          7          3
+## VisTrialError          5.620000e+00         1.48       3          7          4
+## VisSimpleUnderstand    6.150000e+00         1.48       4          7          3
+## VisSysRetrieveInfo     6.110000e+00         1.48       4          7          3
+## VisAppropriate         6.250000e+00         0.00       5          7          2
+## VisFaithful            6.350000e+00         0.00       5          7          2
+## CogTaskComplete        6.210000e+00         1.48       4          7          3
+## CogSysEnjoy            6.060000e+00         1.48       3          7          4
+## CogSysThinkDeep        5.870000e+00         1.48       3          7          4
+## CogSysUseful           6.520000e+00         0.00       5          7          2
+##                         skew kurtosis          se
+## id                      0.55    -1.20       25.95
+## seed                   -0.06    -1.09 39818780.61
+## IntSysEasyStart        -0.97     0.44        0.08
+## IntSysSimpleUnderstand -1.23     1.53        0.08
+## IntAnalysisConfigure   -1.03     0.79        0.08
+## VisRemember            -0.52    -0.28        0.06
+## VisTrialError          -0.49    -0.22        0.07
+## VisSimpleUnderstand    -0.61    -0.22        0.05
+## VisSysRetrieveInfo     -0.49    -0.43        0.05
+## VisAppropriate         -0.18    -0.61        0.04
+## VisFaithful            -0.29    -0.67        0.04
+## CogTaskComplete        -0.63    -0.06        0.05
+## CogSysEnjoy            -1.00     1.03        0.06
+## CogSysThinkDeep        -0.70    -0.09        0.07
+## CogSysUseful           -0.69    -0.58        0.04</code></pre>
 <pre class="r"><code>response.frequencies(data)</code></pre>
 <pre><code>## Warning in response.frequencies(data): response.frequency has been deprecated
 ## and replaced with responseFrequecy.  Please fix your call</code></pre>
-<pre><code>##                              2          3          4          5         6
-## sysEasyStart        0.02654867 0.08849558 0.04424779 0.25221239 0.4026549
-## sysSimpleUnderstand 0.02654867 0.03982301 0.06637168 0.19911504 0.4823009
-## analysisConfigure   0.02654867 0.05752212 0.08407080 0.22566372 0.4557522
-## visRemember         0.00000000 0.00000000 0.05309735 0.19469027 0.4690265
-## trialError          0.00000000 0.04444444 0.10222222 0.29777778 0.3688889
-## visSimpleUnderstand 0.00000000 0.00000000 0.04424779 0.17256637 0.4469027
-## sysRetrieveInfo     0.00000000 0.00000000 0.03539823 0.19911504 0.4424779
-## visAppropriate      0.00000000 0.00000000 0.00000000 0.11504425 0.5663717
-## visFaithful         0.00000000 0.00000000 0.00000000 0.08928571 0.5312500
-## tasksCompleteTask   0.00000000 0.00000000 0.03111111 0.15111111 0.4666667
-## sysEnjoy            0.00000000 0.03097345 0.03982301 0.18141593 0.4469027
-## sysThinkDeep        0.00000000 0.04000000 0.08444444 0.23111111 0.3688889
-## sysUseful           0.00000000 0.00000000 0.00000000 0.08849558 0.3982301
-##                             7        miss
-## sysEasyStart        0.1858407 0.000000000
-## sysSimpleUnderstand 0.1858407 0.000000000
-## analysisConfigure   0.1504425 0.000000000
-## visRemember         0.2831858 0.000000000
-## trialError          0.1866667 0.004424779
-## visSimpleUnderstand 0.3362832 0.000000000
-## sysRetrieveInfo     0.3230088 0.000000000
-## visAppropriate      0.3185841 0.000000000
-## visFaithful         0.3794643 0.008849558
-## tasksCompleteTask   0.3511111 0.004424779
-## sysEnjoy            0.3008850 0.000000000
-## sysThinkDeep        0.2755556 0.004424779
-## sysUseful           0.5132743 0.000000000</code></pre>
+<pre><code>##                                 2          3          4          5         6
+## IntSysEasyStart        0.02654867 0.08849558 0.04424779 0.25221239 0.4026549
+## IntSysSimpleUnderstand 0.02654867 0.03982301 0.06637168 0.19911504 0.4823009
+## IntAnalysisConfigure   0.02654867 0.05752212 0.08407080 0.22566372 0.4557522
+## VisRemember            0.00000000 0.00000000 0.05309735 0.19469027 0.4690265
+## VisTrialError          0.00000000 0.04444444 0.10222222 0.29777778 0.3688889
+## VisSimpleUnderstand    0.00000000 0.00000000 0.04424779 0.17256637 0.4469027
+## VisSysRetrieveInfo     0.00000000 0.00000000 0.03539823 0.19911504 0.4424779
+## VisAppropriate         0.00000000 0.00000000 0.00000000 0.11504425 0.5663717
+## VisFaithful            0.00000000 0.00000000 0.00000000 0.08928571 0.5312500
+## CogTaskComplete        0.00000000 0.00000000 0.03111111 0.15111111 0.4666667
+## CogSysEnjoy            0.00000000 0.03097345 0.03982301 0.18141593 0.4469027
+## CogSysThinkDeep        0.00000000 0.04000000 0.08444444 0.23111111 0.3688889
+## CogSysUseful           0.00000000 0.00000000 0.00000000 0.08849558 0.3982301
+##                                7        miss
+## IntSysEasyStart        0.1858407 0.000000000
+## IntSysSimpleUnderstand 0.1858407 0.000000000
+## IntAnalysisConfigure   0.1504425 0.000000000
+## VisRemember            0.2831858 0.000000000
+## VisTrialError          0.1866667 0.004424779
+## VisSimpleUnderstand    0.3362832 0.000000000
+## VisSysRetrieveInfo     0.3230088 0.000000000
+## VisAppropriate         0.3185841 0.000000000
+## VisFaithful            0.3794643 0.008849558
+## CogTaskComplete        0.3511111 0.004424779
+## CogSysEnjoy            0.3008850 0.000000000
+## CogSysThinkDeep        0.2755556 0.004424779
+## CogSysUseful           0.5132743 0.000000000</code></pre>
 <pre class="r"><code>nb_obs &lt;- nrow(data)
 cat(&quot;\n Sample size:&quot;)</code></pre>
 <pre><code>## 
@@ -803,11 +796,11 @@ cat(&quot;\n Sample size:&quot;)</code></pre>
 print(&quot;1 - antes make_corrM&quot;)</code></pre>
 <pre><code>## [1] &quot;1 - antes make_corrM&quot;</code></pre>
 <pre class="r"><code>colnames(data_reduced_factors)</code></pre>
-<pre><code>##  [1] &quot;visFaithful&quot;         &quot;visSimpleUnderstand&quot; &quot;visAppropriate&quot;     
-##  [4] &quot;sysRetrieveInfo&quot;     &quot;visRemember&quot;         &quot;trialError&quot;         
-##  [7] &quot;sysThinkDeep&quot;        &quot;sysUseful&quot;           &quot;sysEnjoy&quot;           
-## [10] &quot;tasksCompleteTask&quot;   &quot;sysSimpleUnderstand&quot; &quot;sysEasyStart&quot;       
-## [13] &quot;analysisConfigure&quot;</code></pre>
+<pre><code>##  [1] &quot;VisFaithful&quot;            &quot;VisSimpleUnderstand&quot;    &quot;VisAppropriate&quot;        
+##  [4] &quot;VisSysRetrieveInfo&quot;     &quot;VisRemember&quot;            &quot;VisTrialError&quot;         
+##  [7] &quot;CogSysThinkDeep&quot;        &quot;CogSysUseful&quot;           &quot;CogSysEnjoy&quot;           
+## [10] &quot;CogTaskComplete&quot;        &quot;IntSysSimpleUnderstand&quot; &quot;IntSysEasyStart&quot;       
+## [13] &quot;IntAnalysisConfigure&quot;</code></pre>
 <pre class="r"><code>corrM &lt;- make_corrM(data_reduced_factors)</code></pre>
 <pre><code>## [1] &quot;corr M linha 55&quot;</code></pre>
 <pre class="r"><code>## Save as CSV
@@ -1023,7 +1016,8 @@ for (factor in names(UX_factors)) {
 <pre><code>## Omega_h for 1 factor is not meaningful, just omega_t</code></pre>
 <pre><code>## [1] &quot;2 - antes make_corrM&quot;
 ## [1] &quot;corr M linha 55&quot;</code></pre>
-<pre><code>## Warning in FUN(X[[i]], ...): polychoric correlation between variables sysSimpleUnderstand and sysEasyStart produced a warning:
+<pre><code>## Warning in FUN(X[[i]], ...): polychoric correlation between variables IntSysSimpleUnderstand and IntSysEasyStart produced warnings:
+##    NaNs produzidos
 ##    NA/NaN replaced by maximum positive value</code></pre>
 <pre><code>## Omega_h for 1 factor is not meaningful, just omega_t</code></pre>
 <pre class="r"><code># Export consolidated metrics
@@ -1054,9 +1048,9 @@ model_string &lt;- paste(formatted_strings, collapse = &#39;\n&#39;)
 
 # Print the final string
 cat(model_string)</code></pre>
-<pre><code>## visualization  =~  visFaithful + visSimpleUnderstand + visAppropriate + sysRetrieveInfo + visRemember + trialError
-## cognitive  =~  sysThinkDeep + sysUseful + sysEnjoy + tasksCompleteTask
-## intuitiveness  =~  sysSimpleUnderstand + sysEasyStart + analysisConfigure</code></pre>
+<pre><code>## visualization  =~  VisFaithful + VisSimpleUnderstand + VisAppropriate + VisSysRetrieveInfo + VisRemember + VisTrialError
+## cognitive  =~  CogSysThinkDeep + CogSysUseful + CogSysEnjoy + CogTaskComplete
+## intuitiveness  =~  IntSysSimpleUnderstand + IntSysEasyStart + IntAnalysisConfigure</code></pre>
 <pre class="r"><code># CFA General - without separating by system
 fit_overall_pooled &lt;- cfa(
   model   = model_string,
@@ -1131,21 +1125,21 @@ summary(fit_overall_pooled, fit.measures = TRUE, standardized = TRUE)</code></pr
 ## Latent Variables:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
 ##   visualization =~                                                      
-##     visFaithful       1.000                               0.349    0.560
-##     vsSmplUndrstnd    1.589    0.233    6.817    0.000    0.554    0.672
-##     visAppropriate    1.059    0.158    6.717    0.000    0.369    0.590
-##     sysRetrieveInf    1.496    0.215    6.965    0.000    0.522    0.642
-##     visRemember       1.515    0.225    6.745    0.000    0.529    0.636
-##     trialError        1.679    0.271    6.199    0.000    0.586    0.561
+##     VisFaithful       1.000                               0.349    0.560
+##     VsSmplUndrstnd    1.589    0.233    6.817    0.000    0.554    0.672
+##     VisAppropriate    1.059    0.158    6.717    0.000    0.369    0.590
+##     VisSysRetrvInf    1.496    0.215    6.965    0.000    0.522    0.642
+##     VisRemember       1.515    0.225    6.745    0.000    0.529    0.636
+##     VisTrialError     1.679    0.271    6.199    0.000    0.586    0.561
 ##   cognitive =~                                                          
-##     sysThinkDeep      1.000                               0.612    0.571
-##     sysUseful         0.682    0.102    6.698    0.000    0.417    0.642
-##     sysEnjoy          1.076    0.143    7.523    0.000    0.658    0.687
-##     tasksCompltTsk    0.873    0.130    6.707    0.000    0.534    0.685
+##     CogSysThinkDep    1.000                               0.612    0.571
+##     CogSysUseful      0.682    0.102    6.698    0.000    0.417    0.642
+##     CogSysEnjoy       1.076    0.143    7.523    0.000    0.658    0.687
+##     CogTaskComplet    0.873    0.130    6.707    0.000    0.534    0.685
 ##   intuitiveness =~                                                      
-##     sysSmplUndrstn    1.000                               0.974    0.855
-##     sysEasyStart      1.077    0.077   13.937    0.000    1.049    0.840
-##     analysisConfgr    0.923    0.075   12.365    0.000    0.899    0.764
+##     IntSysSmplUndr    1.000                               0.974    0.855
+##     IntSysEasyStrt    1.077    0.077   13.937    0.000    1.049    0.840
+##     IntAnlyssCnfgr    0.923    0.075   12.365    0.000    0.899    0.764
 ## 
 ## Covariances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
@@ -1157,35 +1151,35 @@ summary(fit_overall_pooled, fit.measures = TRUE, standardized = TRUE)</code></pr
 ## 
 ## Intercepts:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .visFaithful       6.284    0.042  151.137    0.000    6.284   10.088
-##    .vsSmplUndrstnd    6.075    0.055  110.740    0.000    6.075    7.366
-##    .visAppropriate    6.204    0.042  148.916    0.000    6.204    9.906
-##    .sysRetrieveInf    6.053    0.054  111.935    0.000    6.053    7.446
-##    .visRemember       5.982    0.055  108.271    0.000    5.982    7.202
-##    .trialError        5.550    0.070   79.765    0.000    5.550    5.315
-##    .sysThinkDeep      5.759    0.071   80.750    0.000    5.759    5.380
-##    .sysUseful         6.425    0.043  148.799    0.000    6.425    9.898
-##    .sysEnjoy          5.947    0.064   93.333    0.000    5.947    6.208
-##    .tasksCompltTsk    6.138    0.052  118.287    0.000    6.138    7.880
-##    .sysSmplUndrstn    5.628    0.076   74.339    0.000    5.628    4.945
-##    .sysEasyStart      5.473    0.083   65.900    0.000    5.473    4.384
-##    .analysisConfgr    5.478    0.078   70.044    0.000    5.478    4.659
+##    .VisFaithful       6.284    0.042  151.137    0.000    6.284   10.088
+##    .VsSmplUndrstnd    6.075    0.055  110.740    0.000    6.075    7.366
+##    .VisAppropriate    6.204    0.042  148.916    0.000    6.204    9.906
+##    .VisSysRetrvInf    6.053    0.054  111.935    0.000    6.053    7.446
+##    .VisRemember       5.982    0.055  108.271    0.000    5.982    7.202
+##    .VisTrialError     5.550    0.070   79.765    0.000    5.550    5.315
+##    .CogSysThinkDep    5.759    0.071   80.750    0.000    5.759    5.380
+##    .CogSysUseful      6.425    0.043  148.799    0.000    6.425    9.898
+##    .CogSysEnjoy       5.947    0.064   93.333    0.000    5.947    6.208
+##    .CogTaskComplet    6.138    0.052  118.287    0.000    6.138    7.880
+##    .IntSysSmplUndr    5.628    0.076   74.339    0.000    5.628    4.945
+##    .IntSysEasyStrt    5.473    0.083   65.900    0.000    5.473    4.384
+##    .IntAnlyssCnfgr    5.478    0.078   70.044    0.000    5.478    4.659
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)   Std.lv  Std.all
-##    .visFaithful       0.266    0.028    9.440    0.000    0.266    0.686
-##    .vsSmplUndrstnd    0.373    0.044    8.560    0.000    0.373    0.549
-##    .visAppropriate    0.256    0.027    9.323    0.000    0.256    0.652
-##    .sysRetrieveInf    0.389    0.044    8.909    0.000    0.389    0.588
-##    .visRemember       0.411    0.046    8.935    0.000    0.411    0.595
-##    .trialError        0.748    0.078    9.538    0.000    0.748    0.686
-##    .sysThinkDeep      0.772    0.085    9.126    0.000    0.772    0.674
-##    .sysUseful         0.248    0.029    8.579    0.000    0.248    0.587
-##    .sysEnjoy          0.484    0.062    7.764    0.000    0.484    0.528
-##    .tasksCompltTsk    0.322    0.040    7.978    0.000    0.322    0.530
-##    .sysSmplUndrstn    0.347    0.057    6.132    0.000    0.347    0.268
-##    .sysEasyStart      0.459    0.069    6.685    0.000    0.459    0.295
-##    .analysisConfgr    0.574    0.069    8.300    0.000    0.574    0.416
+##    .VisFaithful       0.266    0.028    9.440    0.000    0.266    0.686
+##    .VsSmplUndrstnd    0.373    0.044    8.560    0.000    0.373    0.549
+##    .VisAppropriate    0.256    0.027    9.323    0.000    0.256    0.652
+##    .VisSysRetrvInf    0.389    0.044    8.909    0.000    0.389    0.588
+##    .VisRemember       0.411    0.046    8.935    0.000    0.411    0.595
+##    .VisTrialError     0.748    0.078    9.538    0.000    0.748    0.686
+##    .CogSysThinkDep    0.772    0.085    9.126    0.000    0.772    0.674
+##    .CogSysUseful      0.248    0.029    8.579    0.000    0.248    0.587
+##    .CogSysEnjoy       0.484    0.062    7.764    0.000    0.484    0.528
+##    .CogTaskComplet    0.322    0.040    7.978    0.000    0.322    0.530
+##    .IntSysSmplUndr    0.347    0.057    6.132    0.000    0.347    0.268
+##    .IntSysEasyStrt    0.459    0.069    6.685    0.000    0.459    0.295
+##    .IntAnlyssCnfgr    0.574    0.069    8.300    0.000    0.574    0.416
 ##     visualization     0.122    0.030    4.055    0.000    1.000    1.000
 ##     cognitive         0.374    0.091    4.117    0.000    1.000    1.000
 ##     intuitiveness     0.948    0.126    7.512    0.000    1.000    1.000</code></pre>
@@ -1263,7 +1257,7 @@ summary(fit_overall_pooled, fit.measures = TRUE, standardized = TRUE)</code></pr
 ## pgfi                             0.594
 ## mfi                              0.791
 ## ecvi                             1.116</code></pre>
-<pre class="r"><code>  # Filtra apenas os estímulos selecionados
+<pre class="r"><code># Filtra apenas os estímulos selecionados
 grp_data_cfa &lt;- grp_data %&gt;%
   dplyr::filter(stimulus %in% stimuli_letters) %&gt;%
   droplevels()
@@ -1295,14 +1289,14 @@ cat(&quot;\n Model fitting\n&quot;)</code></pre>
   
 # get information per group
 summary(this_fit)</code></pre>
-<pre><code>## lavaan 0.6-21 ended normally after 226 iterations
+<pre><code>## lavaan 0.6-21 ended normally after 228 iterations
 ## 
 ##   Estimator                                         ML
 ##   Optimization method                           NLMINB
 ##   Number of model parameters                       210
 ## 
 ##   Number of observations per group:                   
-##     Power BI                                        43
+##     Power BI                                        44
 ##     Tableau                                         46
 ##     JMP                                             41
 ##     Excel                                           34
@@ -1316,11 +1310,11 @@ summary(this_fit)</code></pre>
 ## 
 ## Model Test User Model:
 ##                                                       
-##   Test statistic                               511.373
+##   Test statistic                               508.085
 ##   Degrees of freedom                               310
 ##   P-value (Chi-square)                           0.000
 ##   Test statistic for each group:
-##     Power BI                                    77.886
+##     Power BI                                    74.599
 ##     Tableau                                     89.436
 ##     JMP                                        137.136
 ##     Excel                                       92.119
@@ -1338,64 +1332,64 @@ summary(this_fit)</code></pre>
 ## Latent Variables:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
 ##   visualization =~                                    
-##     visFaithful       1.000                           
-##     vsSmplUndrstnd    1.387    0.503    2.759    0.006
-##     visAppropriate    1.054    0.331    3.182    0.001
-##     sysRetrieveInf    2.110    0.583    3.620    0.000
-##     visRemember       1.697    0.483    3.510    0.000
-##     trialError        1.361    0.482    2.826    0.005
+##     VisFaithful       1.000                           
+##     VsSmplUndrstnd    1.365    0.490    2.782    0.005
+##     VisAppropriate    1.044    0.331    3.157    0.002
+##     VisSysRetrvInf    2.077    0.568    3.658    0.000
+##     VisRemember       1.697    0.473    3.586    0.000
+##     VisTrialError     1.375    0.502    2.736    0.006
 ##   cognitive =~                                        
-##     sysThinkDeep      1.000                           
-##     sysUseful         0.552    0.127    4.334    0.000
-##     sysEnjoy          1.164    0.205    5.671    0.000
-##     tasksCompltTsk    0.699    0.158    4.425    0.000
+##     CogSysThinkDep    1.000                           
+##     CogSysUseful      0.567    0.128    4.429    0.000
+##     CogSysEnjoy       1.193    0.209    5.697    0.000
+##     CogTaskComplet    0.718    0.159    4.511    0.000
 ##   intuitiveness =~                                    
-##     sysSmplUndrstn    1.000                           
-##     sysEasyStart      1.163    0.157    7.395    0.000
-##     analysisConfgr    1.010    0.168    6.024    0.000
+##     IntSysSmplUndr    1.000                           
+##     IntSysEasyStrt    1.159    0.156    7.452    0.000
+##     IntAnlyssCnfgr    1.007    0.168    6.006    0.000
 ## 
 ## Covariances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
 ##   visualization ~~                                    
-##     cognitive         0.227    0.089    2.540    0.011
-##     intuitiveness     0.180    0.083    2.182    0.029
+##     cognitive         0.213    0.084    2.529    0.011
+##     intuitiveness     0.180    0.081    2.221    0.026
 ##   cognitive ~~                                        
-##     intuitiveness     0.530    0.192    2.752    0.006
+##     intuitiveness     0.507    0.184    2.752    0.006
 ## 
 ## Intercepts:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
-##    .visFaithful       6.221    0.089   69.881    0.000
-##    .vsSmplUndrstnd    5.837    0.139   41.915    0.000
-##    .visAppropriate    6.093    0.086   70.972    0.000
-##    .sysRetrieveInf    6.023    0.134   45.102    0.000
-##    .visRemember       5.953    0.123   48.460    0.000
-##    .trialError        5.488    0.137   40.038    0.000
-##    .sysThinkDeep      5.574    0.191   29.210    0.000
-##    .sysUseful         6.326    0.108   58.741    0.000
-##    .sysEnjoy          5.698    0.166   34.284    0.000
-##    .tasksCompltTsk    5.884    0.132   44.435    0.000
-##    .sysSmplUndrstn    5.233    0.177   29.627    0.000
-##    .sysEasyStart      5.233    0.186   28.197    0.000
-##    .analysisConfgr    5.116    0.187   27.411    0.000
+##    .VisFaithful       6.216    0.087   71.364    0.000
+##    .VsSmplUndrstnd    5.841    0.136   42.901    0.000
+##    .VisAppropriate    6.068    0.087   69.414    0.000
+##    .VisSysRetrvInf    6.023    0.131   46.147    0.000
+##    .VisRemember       5.955    0.120   49.594    0.000
+##    .VisTrialError     5.432    0.145   37.419    0.000
+##    .CogSysThinkDep    5.583    0.187   29.922    0.000
+##    .CogSysUseful      6.341    0.106   59.638    0.000
+##    .CogSysEnjoy       5.727    0.165   34.705    0.000
+##    .CogTaskComplet    5.909    0.132   44.830    0.000
+##    .IntSysSmplUndr    5.227    0.173   30.272    0.000
+##    .IntSysEasyStrt    5.227    0.181   28.812    0.000
+##    .IntAnlyssCnfgr    5.136    0.183   27.993    0.000
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
-##    .visFaithful       0.215    0.052    4.109    0.000
-##    .vsSmplUndrstnd    0.603    0.139    4.325    0.000
-##    .visAppropriate    0.184    0.045    4.039    0.000
-##    .sysRetrieveInf    0.233    0.082    2.824    0.005
-##    .visRemember       0.304    0.081    3.737    0.000
-##    .trialError        0.586    0.135    4.347    0.000
-##    .sysThinkDeep      0.757    0.181    4.194    0.000
-##    .sysUseful         0.258    0.060    4.287    0.000
-##    .sysEnjoy          0.119    0.094    1.269    0.204
-##    .tasksCompltTsk    0.369    0.096    3.858    0.000
-##    .sysSmplUndrstn    0.402    0.115    3.495    0.000
-##    .sysEasyStart      0.211    0.113    1.866    0.062
-##    .analysisConfgr    0.539    0.144    3.733    0.000
-##     visualization     0.120    0.063    1.899    0.058
-##     cognitive         0.788    0.304    2.594    0.009
-##     intuitiveness     0.939    0.286    3.283    0.001
+##    .VisFaithful       0.208    0.051    4.113    0.000
+##    .VsSmplUndrstnd    0.592    0.136    4.369    0.000
+##    .VisAppropriate    0.206    0.050    4.130    0.000
+##    .VisSysRetrvInf    0.232    0.082    2.826    0.005
+##    .VisRemember       0.289    0.078    3.687    0.000
+##    .VisTrialError     0.701    0.159    4.420    0.000
+##    .CogSysThinkDep    0.748    0.176    4.254    0.000
+##    .CogSysUseful      0.252    0.058    4.325    0.000
+##    .CogSysEnjoy       0.111    0.094    1.186    0.236
+##    .CogTaskComplet    0.370    0.094    3.927    0.000
+##    .IntSysSmplUndr    0.392    0.112    3.512    0.000
+##    .IntSysEasyStrt    0.211    0.111    1.901    0.057
+##    .IntAnlyssCnfgr    0.548    0.145    3.792    0.000
+##     visualization     0.120    0.062    1.939    0.052
+##     cognitive         0.764    0.293    2.611    0.009
+##     intuitiveness     0.920    0.277    3.322    0.001
 ## 
 ## 
 ## Group 2 [Tableau]:
@@ -1403,21 +1397,21 @@ summary(this_fit)</code></pre>
 ## Latent Variables:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
 ##   visualization =~                                    
-##     visFaithful       1.000                           
-##     vsSmplUndrstnd    2.274    1.262    1.802    0.072
-##     visAppropriate    1.222    0.731    1.673    0.094
-##     sysRetrieveInf    1.744    1.025    1.702    0.089
-##     visRemember       1.824    1.071    1.703    0.089
-##     trialError        2.614    1.656    1.578    0.115
+##     VisFaithful       1.000                           
+##     VsSmplUndrstnd    2.274    1.262    1.802    0.072
+##     VisAppropriate    1.222    0.731    1.673    0.094
+##     VisSysRetrvInf    1.745    1.025    1.702    0.089
+##     VisRemember       1.824    1.071    1.703    0.089
+##     VisTrialError     2.614    1.656    1.578    0.115
 ##   cognitive =~                                        
-##     sysThinkDeep      1.000                           
-##     sysUseful         0.548    0.205    2.679    0.007
-##     sysEnjoy          1.171    0.331    3.542    0.000
-##     tasksCompltTsk    0.424    0.241    1.758    0.079
+##     CogSysThinkDep    1.000                           
+##     CogSysUseful      0.548    0.205    2.679    0.007
+##     CogSysEnjoy       1.171    0.331    3.542    0.000
+##     CogTaskComplet    0.424    0.241    1.758    0.079
 ##   intuitiveness =~                                    
-##     sysSmplUndrstn    1.000                           
-##     sysEasyStart      0.875    0.150    5.853    0.000
-##     analysisConfgr    0.939    0.140    6.692    0.000
+##     IntSysSmplUndr    1.000                           
+##     IntSysEasyStrt    0.875    0.150    5.853    0.000
+##     IntAnlyssCnfgr    0.939    0.140    6.692    0.000
 ## 
 ## Covariances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
@@ -1429,35 +1423,35 @@ summary(this_fit)</code></pre>
 ## 
 ## Intercepts:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
-##    .visFaithful       6.326    0.093   68.383    0.000
-##    .vsSmplUndrstnd    6.109    0.098   62.129    0.000
-##    .visAppropriate    6.304    0.086   73.098    0.000
-##    .sysRetrieveInf    6.109    0.108   56.821    0.000
-##    .visRemember       6.065    0.108   56.019    0.000
-##    .trialError        5.630    0.161   35.014    0.000
-##    .sysThinkDeep      6.109    0.142   43.125    0.000
-##    .sysUseful         6.457    0.091   71.173    0.000
-##    .sysEnjoy          6.109    0.138   44.179    0.000
-##    .tasksCompltTsk    6.152    0.106   57.846    0.000
-##    .sysSmplUndrstn    5.696    0.187   30.511    0.000
-##    .sysEasyStart      5.304    0.197   26.988    0.000
-##    .analysisConfgr    5.391    0.191   28.270    0.000
+##    .VisFaithful       6.326    0.093   68.383    0.000
+##    .VsSmplUndrstnd    6.109    0.098   62.129    0.000
+##    .VisAppropriate    6.304    0.086   73.098    0.000
+##    .VisSysRetrvInf    6.109    0.108   56.821    0.000
+##    .VisRemember       6.065    0.108   56.019    0.000
+##    .VisTrialError     5.630    0.161   35.014    0.000
+##    .CogSysThinkDep    6.109    0.142   43.126    0.000
+##    .CogSysUseful      6.457    0.091   71.174    0.000
+##    .CogSysEnjoy       6.109    0.138   44.179    0.000
+##    .CogTaskComplet    6.152    0.106   57.846    0.000
+##    .IntSysSmplUndr    5.696    0.187   30.510    0.000
+##    .IntSysEasyStrt    5.304    0.197   26.988    0.000
+##    .IntAnlyssCnfgr    5.391    0.191   28.270    0.000
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
-##    .visFaithful       0.354    0.077    4.594    0.000
-##    .vsSmplUndrstnd    0.241    0.069    3.518    0.000
-##    .visAppropriate    0.283    0.064    4.445    0.000
-##    .sysRetrieveInf    0.412    0.095    4.356    0.000
-##    .visRemember       0.408    0.097    4.204    0.000
-##    .trialError        0.920    0.213    4.319    0.000
-##    .sysThinkDeep      0.550    0.154    3.582    0.000
-##    .sysUseful         0.267    0.068    3.938    0.000
-##    .sysEnjoy          0.368    0.153    2.405    0.016
-##    .tasksCompltTsk    0.453    0.103    4.415    0.000
-##    .sysSmplUndrstn    0.298    0.141    2.121    0.034
-##    .sysEasyStart      0.778    0.195    3.991    0.000
-##    .analysisConfgr    0.522    0.158    3.295    0.001
+##    .VisFaithful       0.354    0.077    4.594    0.000
+##    .VsSmplUndrstnd    0.241    0.069    3.518    0.000
+##    .VisAppropriate    0.283    0.064    4.445    0.000
+##    .VisSysRetrvInf    0.412    0.095    4.356    0.000
+##    .VisRemember       0.408    0.097    4.204    0.000
+##    .VisTrialError     0.920    0.213    4.319    0.000
+##    .CogSysThinkDep    0.550    0.154    3.582    0.000
+##    .CogSysUseful      0.267    0.068    3.938    0.000
+##    .CogSysEnjoy       0.368    0.153    2.405    0.016
+##    .CogTaskComplet    0.453    0.103    4.415    0.000
+##    .IntSysSmplUndr    0.298    0.141    2.121    0.034
+##    .IntSysEasyStrt    0.778    0.195    3.991    0.000
+##    .IntAnlyssCnfgr    0.522    0.158    3.295    0.001
 ##     visualization     0.039    0.042    0.936    0.349
 ##     cognitive         0.373    0.185    2.013    0.044
 ##     intuitiveness     1.305    0.352    3.708    0.000
@@ -1468,21 +1462,21 @@ summary(this_fit)</code></pre>
 ## Latent Variables:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
 ##   visualization =~                                    
-##     visFaithful       1.000                           
-##     vsSmplUndrstnd    2.168    0.771    2.814    0.005
-##     visAppropriate    1.173    0.470    2.497    0.013
-##     sysRetrieveInf    1.202    0.549    2.191    0.028
-##     visRemember       2.361    0.830    2.845    0.004
-##     trialError        2.249    0.849    2.648    0.008
+##     VisFaithful       1.000                           
+##     VsSmplUndrstnd    2.168    0.771    2.813    0.005
+##     VisAppropriate    1.173    0.470    2.497    0.013
+##     VisSysRetrvInf    1.202    0.549    2.191    0.028
+##     VisRemember       2.361    0.830    2.845    0.004
+##     VisTrialError     2.250    0.849    2.648    0.008
 ##   cognitive =~                                        
-##     sysThinkDeep      1.000                           
-##     sysUseful         0.372    0.182    2.038    0.042
-##     sysEnjoy          0.972    0.242    4.017    0.000
-##     tasksCompltTsk    0.828    0.246    3.370    0.001
+##     CogSysThinkDep    1.000                           
+##     CogSysUseful      0.372    0.182    2.038    0.042
+##     CogSysEnjoy       0.972    0.242    4.017    0.000
+##     CogTaskComplet    0.828    0.246    3.370    0.001
 ##   intuitiveness =~                                    
-##     sysSmplUndrstn    1.000                           
-##     sysEasyStart      1.452    0.287    5.064    0.000
-##     analysisConfgr    0.960    0.210    4.579    0.000
+##     IntSysSmplUndr    1.000                           
+##     IntSysEasyStrt    1.452    0.287    5.064    0.000
+##     IntAnlyssCnfgr    0.960    0.210    4.579    0.000
 ## 
 ## Covariances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
@@ -1494,35 +1488,35 @@ summary(this_fit)</code></pre>
 ## 
 ## Intercepts:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
-##    .visFaithful       6.339    0.097   65.139    0.000
-##    .vsSmplUndrstnd    6.073    0.135   44.881    0.000
-##    .visAppropriate    6.293    0.105   60.004    0.000
-##    .sysRetrieveInf    6.000    0.124   48.244    0.000
-##    .visRemember       5.829    0.150   38.871    0.000
-##    .trialError        5.707    0.159   35.899    0.000
-##    .sysThinkDeep      5.854    0.136   43.021    0.000
-##    .sysUseful         6.463    0.098   65.850    0.000
-##    .sysEnjoy          6.073    0.126   48.116    0.000
-##    .tasksCompltTsk    6.195    0.121   51.380    0.000
-##    .sysSmplUndrstn    5.854    0.156   37.426    0.000
-##    .sysEasyStart      5.488    0.199   27.645    0.000
-##    .analysisConfgr    5.683    0.140   40.635    0.000
+##    .VisFaithful       6.339    0.097   65.140    0.000
+##    .VsSmplUndrstnd    6.073    0.135   44.881    0.000
+##    .VisAppropriate    6.293    0.105   60.003    0.000
+##    .VisSysRetrvInf    6.000    0.124   48.244    0.000
+##    .VisRemember       5.829    0.150   38.871    0.000
+##    .VisTrialError     5.707    0.159   35.899    0.000
+##    .CogSysThinkDep    5.854    0.136   43.021    0.000
+##    .CogSysUseful      6.463    0.098   65.850    0.000
+##    .CogSysEnjoy       6.073    0.126   48.116    0.000
+##    .CogTaskComplet    6.195    0.121   51.380    0.000
+##    .IntSysSmplUndr    5.854    0.156   37.426    0.000
+##    .IntSysEasyStrt    5.488    0.199   27.645    0.000
+##    .IntAnlyssCnfgr    5.683    0.140   40.635    0.000
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
-##    .visFaithful       0.287    0.069    4.161    0.000
-##    .vsSmplUndrstnd    0.313    0.098    3.180    0.001
-##    .visAppropriate    0.323    0.080    4.023    0.000
-##    .sysRetrieveInf    0.500    0.119    4.213    0.000
-##    .visRemember       0.403    0.118    3.427    0.001
-##    .trialError        0.565    0.149    3.788    0.000
-##    .sysThinkDeep      0.416    0.110    3.790    0.000
-##    .sysUseful         0.348    0.079    4.418    0.000
-##    .sysEnjoy          0.329    0.107    3.085    0.002
-##    .tasksCompltTsk    0.360    0.087    4.155    0.000
-##    .sysSmplUndrstn    0.469    0.125    3.747    0.000
-##    .sysEasyStart      0.492    0.172    2.856    0.004
-##    .analysisConfgr    0.310    0.090    3.443    0.001
+##    .VisFaithful       0.287    0.069    4.161    0.000
+##    .VsSmplUndrstnd    0.313    0.098    3.180    0.001
+##    .VisAppropriate    0.323    0.080    4.023    0.000
+##    .VisSysRetrvInf    0.500    0.119    4.213    0.000
+##    .VisRemember       0.403    0.118    3.427    0.001
+##    .VisTrialError     0.565    0.149    3.788    0.000
+##    .CogSysThinkDep    0.416    0.110    3.790    0.000
+##    .CogSysUseful      0.348    0.079    4.418    0.000
+##    .CogSysEnjoy       0.329    0.107    3.085    0.002
+##    .CogTaskComplet    0.360    0.087    4.155    0.000
+##    .IntSysSmplUndr    0.469    0.125    3.747    0.000
+##    .IntSysEasyStrt    0.492    0.172    2.856    0.004
+##    .IntAnlyssCnfgr    0.310    0.090    3.443    0.001
 ##     visualization     0.093    0.062    1.498    0.134
 ##     cognitive         0.343    0.153    2.251    0.024
 ##     intuitiveness     0.533    0.208    2.565    0.010
@@ -1533,21 +1527,21 @@ summary(this_fit)</code></pre>
 ## Latent Variables:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
 ##   visualization =~                                    
-##     visFaithful       1.000                           
-##     vsSmplUndrstnd    1.438    0.425    3.385    0.001
-##     visAppropriate    0.929    0.306    3.041    0.002
-##     sysRetrieveInf    1.152    0.365    3.160    0.002
-##     visRemember       1.380    0.416    3.322    0.001
-##     trialError        1.449    0.604    2.399    0.016
+##     VisFaithful       1.000                           
+##     VsSmplUndrstnd    1.438    0.425    3.385    0.001
+##     VisAppropriate    0.929    0.306    3.041    0.002
+##     VisSysRetrvInf    1.152    0.365    3.160    0.002
+##     VisRemember       1.380    0.416    3.322    0.001
+##     VisTrialError     1.449    0.604    2.399    0.016
 ##   cognitive =~                                        
-##     sysThinkDeep      1.000                           
-##     sysUseful         0.946    0.475    1.989    0.047
-##     sysEnjoy          1.153    0.570    2.025    0.043
-##     tasksCompltTsk    0.979    0.480    2.041    0.041
+##     CogSysThinkDep    1.000                           
+##     CogSysUseful      0.945    0.475    1.989    0.047
+##     CogSysEnjoy       1.153    0.569    2.025    0.043
+##     CogTaskComplet    0.979    0.480    2.041    0.041
 ##   intuitiveness =~                                    
-##     sysSmplUndrstn    1.000                           
-##     sysEasyStart      0.875    0.140    6.243    0.000
-##     analysisConfgr    0.537    0.135    3.991    0.000
+##     IntSysSmplUndr    1.000                           
+##     IntSysEasyStrt    0.875    0.140    6.243    0.000
+##     IntAnlyssCnfgr    0.537    0.135    3.991    0.000
 ## 
 ## Covariances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
@@ -1555,39 +1549,39 @@ summary(this_fit)</code></pre>
 ##     cognitive         0.133    0.081    1.645    0.100
 ##     intuitiveness     0.307    0.135    2.269    0.023
 ##   cognitive ~~                                        
-##     intuitiveness     0.359    0.224    1.598    0.110
+##     intuitiveness     0.359    0.224    1.599    0.110
 ## 
 ## Intercepts:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
-##    .visFaithful       6.353    0.101   62.975    0.000
-##    .vsSmplUndrstnd    6.324    0.130   48.762    0.000
-##    .visAppropriate    6.118    0.108   56.549    0.000
-##    .sysRetrieveInf    6.294    0.121   51.813    0.000
-##    .visRemember       6.176    0.141   43.844    0.000
-##    .trialError        5.506    0.196   28.098    0.000
-##    .sysThinkDeep      5.412    0.204   26.494    0.000
-##    .sysUseful         6.500    0.095   68.202    0.000
-##    .sysEnjoy          5.853    0.151   38.830    0.000
-##    .tasksCompltTsk    6.324    0.108   58.644    0.000
-##    .sysSmplUndrstn    5.529    0.236   23.414    0.000
-##    .sysEasyStart      5.559    0.225   24.736    0.000
-##    .analysisConfgr    5.676    0.194   29.282    0.000
+##    .VisFaithful       6.353    0.101   62.975    0.000
+##    .VsSmplUndrstnd    6.324    0.130   48.762    0.000
+##    .VisAppropriate    6.118    0.108   56.549    0.000
+##    .VisSysRetrvInf    6.294    0.121   51.813    0.000
+##    .VisRemember       6.176    0.141   43.844    0.000
+##    .VisTrialError     5.506    0.196   28.098    0.000
+##    .CogSysThinkDep    5.412    0.204   26.494    0.000
+##    .CogSysUseful      6.500    0.095   68.202    0.000
+##    .CogSysEnjoy       5.853    0.151   38.830    0.000
+##    .CogTaskComplet    6.324    0.108   58.644    0.000
+##    .IntSysSmplUndr    5.529    0.236   23.414    0.000
+##    .IntSysEasyStrt    5.559    0.225   24.736    0.000
+##    .IntAnlyssCnfgr    5.676    0.194   29.282    0.000
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
-##    .visFaithful       0.185    0.056    3.301    0.001
-##    .vsSmplUndrstnd    0.240    0.088    2.724    0.006
-##    .visAppropriate    0.259    0.071    3.643    0.000
-##    .sysRetrieveInf    0.289    0.082    3.535    0.000
-##    .visRemember       0.369    0.106    3.468    0.001
-##    .trialError        0.937    0.257    3.641    0.000
-##    .sysThinkDeep      1.192    0.306    3.900    0.000
-##    .sysUseful         0.107    0.047    2.254    0.024
-##    .sysEnjoy          0.472    0.139    3.393    0.001
-##    .tasksCompltTsk    0.178    0.059    3.004    0.003
-##    .sysSmplUndrstn    0.222    0.202    1.102    0.270
-##    .sysEasyStart      0.436    0.179    2.428    0.015
-##    .analysisConfgr    0.795    0.204    3.888    0.000
+##    .VisFaithful       0.185    0.056    3.301    0.001
+##    .VsSmplUndrstnd    0.240    0.088    2.724    0.006
+##    .VisAppropriate    0.259    0.071    3.643    0.000
+##    .VisSysRetrvInf    0.289    0.082    3.535    0.000
+##    .VisRemember       0.369    0.106    3.468    0.001
+##    .VisTrialError     0.937    0.257    3.641    0.000
+##    .CogSysThinkDep    1.192    0.306    3.900    0.000
+##    .CogSysUseful      0.107    0.047    2.254    0.024
+##    .CogSysEnjoy       0.472    0.139    3.393    0.001
+##    .CogTaskComplet    0.178    0.059    3.004    0.003
+##    .IntSysSmplUndr    0.222    0.202    1.102    0.270
+##    .IntSysEasyStrt    0.436    0.179    2.429    0.015
+##    .IntAnlyssCnfgr    0.795    0.204    3.888    0.000
 ##     visualization     0.161    0.078    2.048    0.041
 ##     cognitive         0.226    0.211    1.072    0.284
 ##     intuitiveness     1.674    0.496    3.372    0.001
@@ -1598,21 +1592,21 @@ summary(this_fit)</code></pre>
 ## Latent Variables:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
 ##   visualization =~                                    
-##     visFaithful       1.000                           
-##     vsSmplUndrstnd    1.612    0.593    2.718    0.007
-##     visAppropriate    1.366    0.459    2.976    0.003
-##     sysRetrieveInf    1.927    0.650    2.965    0.003
-##     visRemember       1.078    0.432    2.497    0.013
-##     trialError        2.153    0.735    2.929    0.003
+##     VisFaithful       1.000                           
+##     VsSmplUndrstnd    1.612    0.593    2.718    0.007
+##     VisAppropriate    1.366    0.459    2.976    0.003
+##     VisSysRetrvInf    1.927    0.650    2.965    0.003
+##     VisRemember       1.078    0.432    2.497    0.013
+##     VisTrialError     2.153    0.735    2.929    0.003
 ##   cognitive =~                                        
-##     sysThinkDeep      1.000                           
-##     sysUseful         0.826    0.173    4.788    0.000
-##     sysEnjoy          0.831    0.231    3.600    0.000
-##     tasksCompltTsk    0.767    0.192    3.986    0.000
+##     CogSysThinkDep    1.000                           
+##     CogSysUseful      0.826    0.173    4.788    0.000
+##     CogSysEnjoy       0.831    0.231    3.600    0.000
+##     CogTaskComplet    0.767    0.192    3.986    0.000
 ##   intuitiveness =~                                    
-##     sysSmplUndrstn    1.000                           
-##     sysEasyStart      1.174    0.160    7.352    0.000
-##     analysisConfgr    1.194    0.169    7.046    0.000
+##     IntSysSmplUndr    1.000                           
+##     IntSysEasyStrt    1.174    0.160    7.352    0.000
+##     IntAnlyssCnfgr    1.194    0.169    7.046    0.000
 ## 
 ## Covariances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
@@ -1624,37 +1618,37 @@ summary(this_fit)</code></pre>
 ## 
 ## Intercepts:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
-##    .visFaithful       6.182    0.098   63.161    0.000
-##    .vsSmplUndrstnd    6.091    0.119   50.979    0.000
-##    .visAppropriate    6.250    0.092   68.219    0.000
-##    .sysRetrieveInf    5.932    0.126   47.033    0.000
-##    .visRemember       5.886    0.092   63.893    0.000
-##    .trialError        5.568    0.134   41.534    0.000
-##    .sysThinkDeep      5.773    0.136   42.495    0.000
-##    .sysUseful         6.318    0.105   59.892    0.000
-##    .sysEnjoy          5.955    0.140   42.553    0.000
-##    .tasksCompltTsk    6.114    0.117   52.323    0.000
-##    .sysSmplUndrstn    5.750    0.129   44.551    0.000
-##    .sysEasyStart      5.818    0.155   37.523    0.000
-##    .analysisConfgr    5.568    0.162   34.376    0.000
+##    .VisFaithful       6.182    0.098   63.161    0.000
+##    .VsSmplUndrstnd    6.091    0.119   50.979    0.000
+##    .VisAppropriate    6.250    0.092   68.219    0.000
+##    .VisSysRetrvInf    5.932    0.126   47.032    0.000
+##    .VisRemember       5.886    0.092   63.893    0.000
+##    .VisTrialError     5.568    0.134   41.534    0.000
+##    .CogSysThinkDep    5.773    0.136   42.495    0.000
+##    .CogSysUseful      6.318    0.105   59.892    0.000
+##    .CogSysEnjoy       5.955    0.140   42.553    0.000
+##    .CogTaskComplet    6.114    0.117   52.323    0.000
+##    .IntSysSmplUndr    5.750    0.129   44.551    0.000
+##    .IntSysEasyStrt    5.818    0.155   37.523    0.000
+##    .IntAnlyssCnfgr    5.568    0.162   34.376    0.000
 ## 
 ## Variances:
 ##                    Estimate  Std.Err  z-value  P(&gt;|z|)
-##    .visFaithful       0.327    0.073    4.484    0.000
-##    .vsSmplUndrstnd    0.383    0.089    4.306    0.000
-##    .visAppropriate    0.193    0.047    4.076    0.000
-##    .sysRetrieveInf    0.349    0.084    4.148    0.000
-##    .visRemember       0.264    0.059    4.449    0.000
-##    .trialError        0.354    0.088    4.025    0.000
-##    .sysThinkDeep      0.389    0.095    4.086    0.000
-##    .sysUseful         0.201    0.057    3.554    0.000
-##    .sysEnjoy          0.570    0.134    4.240    0.000
-##    .tasksCompltTsk    0.352    0.085    4.165    0.000
-##    .sysSmplUndrstn    0.151    0.060    2.520    0.012
-##    .sysEasyStart      0.255    0.086    2.977    0.003
-##    .analysisConfgr    0.325    0.098    3.302    0.001
+##    .VisFaithful       0.327    0.073    4.484    0.000
+##    .VsSmplUndrstnd    0.383    0.089    4.306    0.000
+##    .VisAppropriate    0.193    0.047    4.076    0.000
+##    .VisSysRetrvInf    0.349    0.084    4.148    0.000
+##    .VisRemember       0.264    0.059    4.449    0.000
+##    .VisTrialError     0.354    0.088    4.025    0.000
+##    .CogSysThinkDep    0.389    0.095    4.086    0.000
+##    .CogSysUseful      0.201    0.057    3.554    0.000
+##    .CogSysEnjoy       0.570    0.134    4.240    0.000
+##    .CogTaskComplet    0.352    0.085    4.165    0.000
+##    .IntSysSmplUndr    0.151    0.060    2.520    0.012
+##    .IntSysEasyStrt    0.255    0.086    2.977    0.003
+##    .IntAnlyssCnfgr    0.325    0.098    3.302    0.001
 ##     visualization     0.094    0.061    1.558    0.119
-##     cognitive         0.423    0.159    2.659    0.008
+##     cognitive         0.423    0.159    2.658    0.008
 ##     intuitiveness     0.582    0.161    3.617    0.000</code></pre>
 <pre class="r"><code>cat(&quot;\n==============\n&quot;)</code></pre>
 <pre><code>## 
@@ -1669,58 +1663,58 @@ fitMeasures_output(this_fit, this_filename)</code></pre>
 <pre><code>## 
 ## Model Test User Model:
 ## 
-##   Test statistic                               511.373
+##   Test statistic                               508.085
 ##   Degrees of freedom                               310
 ##   P-value                                        0.000
 ## 
 ## User Model versus Baseline Model:
 ## 
-##   Comparative Fit Index (CFI)                    0.826
+##   Comparative Fit Index (CFI)                    0.828
 ## 
 ## Root Mean Square Error of Approximation:
 ## 
-##   RMSEA                                          0.125
+##   RMSEA                                          0.124
 ## 
 ## DETAILS
 ## =================
 ##                                 Tst_-_
 ## npar                           210.000
-## fmin                             1.229
-## chisq                          511.373
+## fmin                             1.216
+## chisq                          508.085
 ## df                             310.000
 ## pvalue                           0.000
-## baseline.chisq                1545.519
+## baseline.chisq                1543.271
 ## baseline.df                    390.000
 ## baseline.pvalue                  0.000
-## cfi                              0.826
-## tli                              0.781
-## cfi.robust                       0.825
-## tli.robust                       0.780
-## nnfi                             0.781
-## rfi                              0.584
-## nfi                              0.669
-## pnfi                             0.532
-## ifi                              0.837
-## rni                              0.826
-## nnfi.robust                      0.780
-## rni.robust                       0.825
-## logl                         -2880.378
-## unrestricted.logl            -2624.692
-## aic                           6180.756
-## bic                           6881.639
-## ntotal                         208.000
-## bic2                          6216.257
-## rmsea                            0.125
-## rmsea.ci.lower                   0.105
-## rmsea.ci.upper                   0.144
+## cfi                              0.828
+## tli                              0.784
+## cfi.robust                       0.828
+## tli.robust                       0.783
+## nnfi                             0.784
+## rfi                              0.586
+## nfi                              0.671
+## pnfi                             0.533
+## ifi                              0.839
+## rni                              0.828
+## nnfi.robust                      0.783
+## rni.robust                       0.828
+## logl                         -2898.177
+## unrestricted.logl            -2644.134
+## aic                           6216.353
+## bic                           6918.244
+## ntotal                         209.000
+## bic2                          6252.852
+## rmsea                            0.124
+## rmsea.ci.lower                   0.104
+## rmsea.ci.upper                   0.143
 ## rmsea.ci.level                   0.900
 ## rmsea.pvalue                     0.000
 ## rmsea.close.h0                   0.050
 ## rmsea.notclose.pvalue            1.000
 ## rmsea.notclose.h0                0.080
-## rmsea.robust                     0.125
-## rmsea.ci.lower.robust            0.106
-## rmsea.ci.upper.robust            0.144
+## rmsea.robust                     0.124
+## rmsea.ci.lower.robust            0.104
+## rmsea.ci.upper.robust            0.143
 ## rmsea.pvalue.robust              0.000
 ## rmsea.notclose.pvalue.robust     1.000
 ## rmr                              0.080
@@ -1732,13 +1726,13 @@ fitMeasures_output(this_fit, this_filename)</code></pre>
 ## crmr_nomean                      0.119
 ## srmr_mplus                       0.104
 ## srmr_mplus_nomean                0.110
-## cn_05                          144.200
-## cn_01                          151.842
+## cn_05                          145.820
+## cn_01                          153.548
 ## gfi                              0.991
 ## agfi                             0.985
 ## pgfi                             0.591
-## mfi                              0.616
-## ecvi                             4.478</code></pre>
+## mfi                              0.623
+## ecvi                             4.441</code></pre>
 <div id="model-fit-indices" class="section level3">
 <h3>Model fit indices</h3>
 </div>
@@ -1902,9 +1896,9 @@ cat(&quot;\n--- Likelihood Ratio Tests (Model Comparison) ---\n&quot;)</code></p
 ## Chi-Squared Difference Test
 ## 
 ##       Df    AIC    BIC  Chisq Chisq diff Df diff Pr(&gt;Chisq)  
-## fit1 310 6180.8 6881.6 511.37                                
-## fit2 350 6145.1 6712.5 555.74     44.365      40    0.29276  
-## fit3 390 6117.2 6551.1 607.79     52.052      40    0.09599 .
+## fit1 310 6216.4 6918.2 508.09                                
+## fit2 350 6180.2 6748.4 551.90     43.816      40    0.31282  
+## fit3 390 6152.8 6587.3 604.52     52.614      40    0.08734 .
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 <p>#We already ran checks on overall data. Now we also check individual
@@ -2491,7 +2485,7 @@ for (letter in stimuli_letters) {
 ##  #### Shapiro in Power BI 
 ## 
 ##  #### Multivariate normality in Power BI</code></pre>
-<p><img role="img" aria-label src="data:image/png;base64,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" alt width="672" /></p>
+<p><img role="img" aria-label src="data:image/png;base64,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" alt width="672" /></p>
 <pre><code>## 
 ## =================
 ##  MISSING DATA IN in Power BI 
@@ -2499,105 +2493,107 @@ for (letter in stimuli_letters) {
 ##  Little&#39;s MCAR Test
 ## 
 ##    n nIncomp nPattern  chi2 df     p
-##   43       2        3 33.38 24 0.096
+##   44       2        3 34.12 24 0.083
 ## 
 ## #### Amount of missing data
-## 0.35778175313059 % of data is missing</code></pre>
+## 0.34965034965035 % of data is missing</code></pre>
 <pre><code>## Aviso nos testes preliminares para Power BI: argumento tem comprimento zero</code></pre>
 <pre><code>## 
 ## --- RELIABILITY with 1 factor(s) in Power BI ---
 ## [1] &quot;3 - antes make_corrM&quot;
 ## [1] &quot;corr M linha 55&quot;</code></pre>
-<pre><code>## Warning in FUN(X[[i]], ...): polychoric correlation between variables intuitiveness1 and intuitiveness2 produced a warning:
+<pre><code>## Warning in FUN(X[[i]], ...): polychoric correlation between variables intuitiveness1 and intuitiveness2 produced warnings:
+##    NaNs produzidos
 ##    NA/NaN replaced by maximum positive value</code></pre>
 <pre><code>## Omega_h for 1 factor is not meaningful, just omega_t</code></pre>
-<pre><code>## Alpha: 0.9172522 
-## G.6: 0.9823161 
-## Omega Total: 0.9184645 
+<pre><code>## Alpha: 0.9128499 
+## G.6: 0.9742092 
+## Omega Total: 0.9140439 
 ## 
 ## --- RELIABILITY with 3 factor(s) in Power BI ---
 ## [1] &quot;3 - antes make_corrM&quot;
 ## [1] &quot;corr M linha 55&quot;</code></pre>
-<pre><code>## Warning in FUN(X[[i]], ...): polychoric correlation between variables intuitiveness1 and intuitiveness2 produced a warning:
+<pre><code>## Warning in FUN(X[[i]], ...): polychoric correlation between variables intuitiveness1 and intuitiveness2 produced warnings:
+##    NaNs produzidos
 ##    NA/NaN replaced by maximum positive value</code></pre>
-<pre><code>## Alpha: 0.9172522 
-## G.6: 0.9823161 
-## Omega Total: 0.9489261 
+<pre><code>## Alpha: 0.9128499 
+## G.6: 0.9742092 
+## Omega Total: 0.9463409 
 ## 
 ## --- Individual CFA Fit for Power BI ---
 ## 
 ## Model Test User Model:
 ## 
-##   Test statistic                                77.886
+##   Test statistic                                74.599
 ##   Degrees of freedom                                62
-##   P-value                                        0.084
+##   P-value                                        0.131
 ## 
 ## User Model versus Baseline Model:
 ## 
-##   Comparative Fit Index (CFI)                    0.940
+##   Comparative Fit Index (CFI)                    0.952
 ## 
 ## Root Mean Square Error of Approximation:
 ## 
-##   RMSEA                                          0.077
+##   RMSEA                                          0.068
 ## 
 ## DETAILS
 ## =================
 ##                                T_-PBI
 ## npar                           42.000
-## fmin                            0.906
-## chisq                          77.886
+## fmin                            0.848
+## chisq                          74.599
 ## df                             62.000
-## pvalue                          0.084
-## baseline.chisq                344.973
+## pvalue                          0.131
+## baseline.chisq                342.725
 ## baseline.df                    78.000
 ## baseline.pvalue                 0.000
-## cfi                             0.940
-## tli                             0.925
-## cfi.robust                      0.937
-## tli.robust                      0.920
-## nnfi                            0.925
-## rfi                             0.716
-## nfi                             0.774
-## pnfi                            0.615
-## ifi                             0.944
-## rni                             0.940
-## nnfi.robust                     0.920
-## rni.robust                      0.937
-## logl                         -600.047
-## unrestricted.logl            -561.104
-## aic                          1284.094
-## bic                          1358.064
-## ntotal                         43.000
-## bic2                         1226.496
-## rmsea                           0.077
+## cfi                             0.952
+## tli                             0.940
+## cfi.robust                      0.949
+## tli.robust                      0.936
+## nnfi                            0.940
+## rfi                             0.726
+## nfi                             0.782
+## pnfi                            0.622
+## ifi                             0.955
+## rni                             0.952
+## nnfi.robust                     0.936
+## rni.robust                      0.949
+## logl                         -617.846
+## unrestricted.logl            -580.546
+## aic                          1319.691
+## bic                          1394.627
+## ntotal                         44.000
+## bic2                         1263.016
+## rmsea                           0.068
 ## rmsea.ci.lower                  0.000
-## rmsea.ci.upper                  0.126
+## rmsea.ci.upper                  0.119
 ## rmsea.ci.level                  0.900
-## rmsea.pvalue                    0.218
+## rmsea.pvalue                    0.303
 ## rmsea.close.h0                  0.050
-## rmsea.notclose.pvalue           0.489
+## rmsea.notclose.pvalue           0.382
 ## rmsea.notclose.h0               0.080
-## rmsea.robust                    0.080
+## rmsea.robust                    0.071
 ## rmsea.ci.lower.robust           0.000
-## rmsea.ci.upper.robust           0.129
-## rmsea.pvalue.robust             0.198
-## rmsea.notclose.pvalue.robust    0.521
-## rmr                             0.069
+## rmsea.ci.upper.robust           0.121
+## rmsea.pvalue.robust             0.280
+## rmsea.notclose.pvalue.robust    0.413
+## rmr                             0.070
 ## rmr_nomean                      0.074
 ## srmr                            0.083
 ## srmr_bentler                    0.083
-## srmr_bentler_nomean             0.089
+## srmr_bentler_nomean             0.088
 ## crmr                            0.088
 ## crmr_nomean                     0.095
-## srmr_mplus                      0.087
+## srmr_mplus                      0.086
 ## srmr_mplus_nomean               0.088
-## cn_05                          45.929
-## cn_01                          51.130
-## gfi                             0.993
+## cn_05                          49.000
+## cn_01                          54.557
+## gfi                             0.994
 ## agfi                            0.989
 ## pgfi                            0.592
-## mfi                             0.831
-## ecvi                            3.765</code></pre>
+## mfi                             0.867
+## ecvi                            3.605</code></pre>
 <pre class="r"><code># Salvar tabela de confiabilidade por estímulo
 write.csv(reliab_df, file.path(output_dir, &quot;generatedData-CFA/reliability-global-by-stimuli.csv&quot;))</code></pre>
 <pre class="r"><code># Bifactor / Hierarchical Model: 1 General Factor (overall_UX) + Specific Subfactors

@@ -264,14 +264,7 @@ https://lavaan.ugent.be/tutorial/groups.html
 
 #we retrieve our model from EFA conducted on all data
 
-this_model <- "Tested_model"
-## best items selected on reliability measures only
-
-#UX_factors <- list(
-#  understand = list("obvious","represent","understandEasi"),
-#  layout = list("messi", "crowd","distract"),
-#  dataRead = list("inform","identifi","find"),
-#  dataFeat = list("visibl","see")
+this_model <- "Tested_model" #model used in the validation survey
 
 #UX_factors <- list(
 #  visualization = list('P106','P089','P098','P097', 'P022A','P067'),
@@ -281,9 +274,9 @@ this_model <- "Tested_model"
 
 
 UX_factors <- list(
-  visualization = list('visFaithful','visSimpleUnderstand','visAppropriate','sysRetrieveInfo', 'visRemember','trialError'),
-  cognitive = list('sysThinkDeep', 'sysUseful', 'sysEnjoy', 'tasksCompleteTask'),
-  intuitiveness = list('sysSimpleUnderstand', 'sysEasyStart', 'analysisConfigure')
+  visualization = list('VisFaithful', 'VisSimpleUnderstand', 'VisAppropriate', 'VisSysRetrieveInfo', 'VisRemember', 'VisTrialError'),
+  cognitive = list('CogSysThinkDeep', 'CogSysUseful', 'CogSysEnjoy', 'CogTaskComplete'),
+  intuitiveness = list('IntSysSimpleUnderstand', 'IntSysEasyStart', 'IntAnalysisConfigure')
 )
 
 
@@ -344,7 +337,7 @@ print(nb_obs)
 ```
 
 
-```{r reliability of each sub-scale (each factor)}
+```{r reliability of each items (each factor)}
 
 cat("\n\n==========================================\n")
 cat("==========================================\n")
@@ -371,11 +364,11 @@ corrM <- make_corrM(data_reduced_factors)
 
 ## Save as CSV
 #write.csv(corrM, "generatedData-CFA/subscales-correlation.csv")
-write.csv(corrM, file.path(output_dir, "generatedData-CFA/subscales-correlation.csv"))
+write.csv(corrM, file.path(output_dir, "generatedData-CFA/items_correlations.csv"))
 
 
 ## Save as PDF
-this_file <- file.path(output_dir, "generatedPlots-CFA/subscales-corr.pdf")
+this_file <- file.path(output_dir, "generatedPlots-CFA/items-correlation-plot.pdf")
 pdf(this_file, height = 15, width = 15)
 plot <- corrplot(
   corrM,
@@ -698,21 +691,21 @@ for (letter in stimuli_letters) {
     droplevels()
   
   if (nrow(the_data) == 0) {
-    message("Sem dados para o estímulo: ", letter)
+    message("No data for stimulus: ", letter)
     next
   }
   
-  # Selecionar variáveis de interesse
+  # Select variables
   subset_data <- select_all_variables(the_data, columns_to_keep)
   
-  # 1. Executar checagens de normalidade e adequação protegidas
+  # 1. Checagens normality and adequacy
   tryCatch({
     stimulus_data_test(subset_data, letter)
   }, error = function(e) {
-    message("Aviso nos testes preliminares para ", letter, ": ", e$message)
+    message("Warnign for preliminary tests ", letter, ": ", e$message)
   })
   
-  # 2. Confiabilidade por número de fatores
+
   this_alpha <- NA_real_
   this_om_1f <- NA_real_
   this_om_4f <- NA_real_
@@ -722,14 +715,17 @@ for (letter in stimuli_letters) {
     
     tryCatch({
       
-         print("3 - antes make_corrM")
-
+       
       colnames(subset_data)
       
       c_mat <- make_corrM(subset_data)
       
+      #save correlation matrix:
+      write.csv(c_mat, file.path(output_dir, paste0("generatedData-CFA/corr_matrix_", letter, ".csv")))
+
+      
       if (!is.null(c_mat) && ncol(c_mat) >= 2) {
-        # Suavização para matrizes não positivas definidas em subamostras
+        # smoothing of non positive matrix
         if (any(eigen(c_mat)$values <= 0)) {
           c_mat <- psych::cor.smooth(c_mat)
         }
@@ -756,14 +752,14 @@ for (letter in stimuli_letters) {
         }
       }
     }, error = function(e) {
-      message("Erro ao calcular Omega (", nb_f, " fatores) em ", letter, ": ", e$message)
+      message("Error to calculate Omega (", nb_f, " factors) in ", letter, ": ", e$message)
     })
   }
   
-  # Armazenar resultados de confiabilidade da coluna
+  # Store reliability data
   reliab_df[[paste(letter, "- factors")]] <- c(this_alpha, this_om_1f, this_om_4f)
   
-  # 3. CFA individual por estímulo
+  # 3. CFA individual by stimulus
   cat(paste("\n--- Individual CFA Fit for", letter, "---\n"))
   tryCatch({
     this_fit <- lavaan::cfa(
@@ -775,11 +771,11 @@ for (letter in stimuli_letters) {
     this_filename <- paste0(this_model, '-', letter)
     fitMeasures_output(this_fit, this_filename)
   }, error = function(e) {
-    message("Erro na CFA para o estímulo ", letter, ": ", e$message)
+    message("Error in CFA for stimulus ", letter, ": ", e$message)
   })
 }
 
-# Salvar tabela de confiabilidade por estímulo
+# Save reliability table by stimulus
 write.csv(reliab_df, file.path(output_dir, "generatedData-CFA/reliability-global-by-stimuli.csv"))
 
 ```
