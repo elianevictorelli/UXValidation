@@ -26,29 +26,22 @@ library(knitr)
 - **Intuitiveness**: `P088`, `P026`, `P4026A`
 - **Visualization**: `P106`, `P089`, `P098`, `P097`, `P022A`, `P067`
 
-The full item × item polychoric matrix is computed (within-construct pairs included this
-time), ordered by construct block in the order above. A hierarchical clustering is then run
-on the same matrix to check whether items empirically group the way the six intended
-constructs assume, or whether the data suggests a different structure.
+The complete polychoric matrix is calculated item by item (including, in this instance, pairs within the same construct), organized by construct blocks in the previously indicated order. Subsequently, a hierarchical cluster analysis is performed on this same matrix to verify whether the items group together empirically as hypothesized by the six intended constructs or if the data suggest a different structure. This script was executed twice: first, using only the items from the main scales, to generate a more suitable figure; and second, including the gold-standard items as well.
 
 ```{r load-data}
-#df <- read.csv(
-#  "../Data/multigroup_ratings_withNAs.csv",
-#  stringsAsFactors = FALSE, na.strings = c("NA", "")
-#)
 
 df <- read.csv(
-  "../Data/multigroup_ratings-withNAs.csv",
+  "../Data/uxColaps_sus_ueqs_ratings.csv",
   stringsAsFactors = FALSE,
   na.strings = c("NA", ""),
   check.names = FALSE
 )
 
 item_groups <- list(
-  #SUS             = c("SUS_1", "SUS_2", "SUS_3", "SUS_4", "SUS_5",
-  #                     "SUS_6", "SUS_7", "SUS_8", "SUS_9", "SUS_10"),
-  #UEQ_pragmatic   = c("UEQ_1", "UEQ_2", "UEQ_3", "UEQ_4"),
-  #UEQ_hedonic     = c("UEQ_5", "UEQ_6", "UEQ_7", "UEQ_8"),
+  SUS             = c("SUS_1", "SUS_2", "SUS_3", "SUS_4", "SUS_5",
+                       "SUS_6", "SUS_7", "SUS_8", "SUS_9", "SUS_10"),
+  UEQ_pragmatic   = c("UEQ_1", "UEQ_2", "UEQ_3", "UEQ_4"),
+  UEQ_hedonic     = c("UEQ_5", "UEQ_6", "UEQ_7", "UEQ_8"),
   Cognitive_value = c("P064", "P301", "P060", "P027"),
   Intuitiveness   = c("P088", "P026", "P4026A"),
   Visualization   = c("P106", "P089", "P098", "P097", "P022A", "P067")
@@ -62,15 +55,15 @@ item_to_group <- data.frame(
 
 all_items <- item_to_group$item
 
-#group_colors <- setNames(
-#  c("#5E4EA3", "#379EB8", "#4AAF77", "#E02884", "#F06128", "#E2A600"),
-#  names(item_groups)
-#)
-
 group_colors <- setNames(
-  c("#E02884", "#F06128", "#E2A600"),
+  c("#5E4EA3", "#379EB8", "#4AAF77", "#E02884", "#F06128", "#E2A600"),
   names(item_groups)
 )
+
+#group_colors <- setNames(
+#  c("#E02884", "#F06128", "#E2A600"),
+#  names(item_groups)
+#)
 
 
 
@@ -100,32 +93,25 @@ in the resulting matrix points the same "more positive" direction and signs are 
 comparable across the whole matrix (matches the reverse-coding already applied to the SUS
 composite in the Pearson notebook).
 
-1```{r hetcor}
-#reverse_items <- c("SUS_2", "SUS_4", "SUS_6", "SUS_8", "SUS_10")
+```{r hetcor}
+reverse_items <- c("SUS_2", "SUS_4", "SUS_6", "SUS_8", "SUS_10")
 
+# 1. Select only targeting columns
 item_df <- df[, all_items]
-#for (col in reverse_items) {
-#  item_df[[col]] <- 6 - item_df[[col]]  # 1-5 Likert: flip negatively-worded SUS items
-#}
-#item_df[] <- lapply(item_df, ordered)
 
+# 2. Invert SUS negative items (1-5 -> 6 - value)
+# 
+for (col in reverse_items) {
+  if (col %in% colnames(item_df)) {
+    item_df[[col]] <- 6 - as.numeric(item_df[[col]])
+  }
+}
 
-
-#for (col in reverse_items) {
-#  item_df[[col]] <- 6 - as.numeric(item_df[[col]])
-#}
-
-# Converte todas as colunas para ordered sem usar item_df[] <-
+# 3. Convert all columns to ordered factors 
 item_df <- as.data.frame(lapply(item_df, ordered))
 
-#het <- hetcor(item_df, use = "pairwise.complete.obs", std.err = FALSE, ML = FALSE)
-
+# 4. Executa a correlação policórica
 het <- polycor::hetcor(item_df, use = "pairwise.complete.obs", std.err = FALSE, ML = FALSE)
-  
-  
-  
-  
-
 
 ```
 
