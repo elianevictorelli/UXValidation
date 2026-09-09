@@ -500,27 +500,93 @@ extract_reliability &lt;- function(fit_obj, model_label) {
     return(NULL)
   }
   
+  # 1. Extração de Alpha e Omega via semTools::reliability
   rel_mat &lt;- tryCatch({
     semTools::reliability(fit_obj)
   }, error = function(e) NULL)
   
   if (is.null(rel_mat)) return(NULL)
   
-  # Converte a matriz de saída para data.frame
   rel_df &lt;- as.data.frame(t(rel_mat))
   rel_df$Factor &lt;- rownames(rel_df)
   rel_df$Model  &lt;- as.character(model_label)
   
-  # Mantém as colunas relevantes incluindo a coluna &#39;ave&#39;
-  cols_present &lt;- intersect(c(&quot;Model&quot;, &quot;Factor&quot;, &quot;alpha&quot;, &quot;omega&quot;, &quot;ave&quot;), colnames(rel_df))
+  # Padronização do nome do AVE caso venha como &#39;avevar&#39;
+  if (&quot;avevar&quot; %in% colnames(rel_df)) {
+    rel_df$ave &lt;- rel_df$avevar
+  }
+  
+  # 2. Caso a função reliability não traga o AVE, calcula via semTools::AVE ou via cargas padronizadas
+  if (!&quot;ave&quot; %in% colnames(rel_df) || any(is.na(rel_df$ave))) {
+    ave_vals &lt;- tryCatch({
+      semTools::AVE(fit_obj)
+    }, error = function(e) {
+      # Cálculo direto via média de lambda^2 caso a função semTools::AVE falhe
+      std_sol &lt;- lavaan::standardizedSolution(fit_obj)
+      std_sol %&gt;%
+        dplyr::filter(op == &quot;=~&quot;) %&gt;%
+        dplyr::group_by(lhs) %&gt;%
+        dplyr::summarise(ave = mean(est.std^2, na.rm = TRUE)) %&gt;%
+        tibble::deframe()
+    })
+    
+    if (!is.null(ave_vals)) {
+      rel_df$ave &lt;- as.numeric(ave_vals[rel_df$Factor])
+    }
+  }
+  
+  # 3. Seleção e ordenação das colunas finais
+  cols_to_select &lt;- c(&quot;Model&quot;, &quot;Factor&quot;, &quot;alpha&quot;, &quot;omega&quot;, &quot;ave&quot;)
+  cols_present &lt;- intersect(cols_to_select, colnames(rel_df))
   rel_df &lt;- rel_df[, cols_present, drop = FALSE]
   
-  # Arredondamento
+  # Arredondamento numérico
   num_cols &lt;- sapply(rel_df, is.numeric)
   rel_df[num_cols] &lt;- round(rel_df[num_cols], 4)
   rownames(rel_df) &lt;- NULL
   
   return(rel_df)
+}
+
+# 4. Extraction of standardized individual factor loadings (lambda / Std.all), p-values, and R2
+extract_cfa_loadings &lt;- function(fit_obj, model_label) {
+  if (is.null(fit_obj) || !is(fit_obj, &quot;lavaan&quot;) || !lavInspect(fit_obj, &quot;converged&quot;)) {
+    return(NULL)
+  }
+  
+  std_params &lt;- tryCatch({
+    lavaan::standardizedSolution(fit_obj)
+  }, error = function(e) NULL)
+  
+  if (is.null(std_params)) return(NULL)
+  
+  # Filtra apenas os relacionamentos de carga fatorial (operador &#39;=~&#39;)
+  loadings_df &lt;- std_params %&gt;%
+    dplyr::filter(op == &quot;=~&quot;) %&gt;%
+    dplyr::select(
+      Factor     = lhs,
+      Item       = rhs,
+      Std_all    = est.std,     # Coluna Std.all (lambda padronizado)
+      SE         = se,
+      Z_Value    = z,
+      P_Value    = pvalue,
+      CI_Lower   = ci.lower,
+      CI_Upper   = ci.upper
+    )
+  
+  # R2 = Std.all^2 (variancia explicada de cada item)
+  loadings_df$R_Squared &lt;- round(loadings_df$Std_all^2, 4)
+  loadings_df$Model     &lt;- as.character(model_label)
+  
+  # Reorganiza a estrutura das colunas
+  loadings_df &lt;- loadings_df %&gt;%
+    dplyr::select(Model, Factor, Item, Std_all, R_Squared, SE, Z_Value, P_Value, CI_Lower, CI_Upper)
+  
+  num_cols &lt;- sapply(loadings_df, is.numeric)
+  loadings_df[num_cols] &lt;- round(loadings_df[num_cols], 4)
+  rownames(loadings_df) &lt;- NULL
+  
+  return(loadings_df)
 }</code></pre>
 </div>
 <div id="model-factor-definitions-global-registry" class="section level2">
@@ -584,6 +650,16 @@ models_factor_specs &lt;- list(
   &quot;3_Factor_D&quot; = list(
     visualization = c(&#39;VisFaithful&#39;, &#39;VisSimpleUnderstand&#39;, &#39;VisAppropriate&#39;, &#39;VisSysRetrieveInfo&#39;, &#39;VisRemember&#39;),
     cognitive     = c(&#39;CogSysThinkDeep&#39;, &#39;CogSysUseful&#39;, &#39;CogSysEnjoy&#39;),
+    intuitiveness = c(&#39;IntSysSimpleUnderstand&#39;, &#39;IntSysEasyStart&#39;, &#39;IntAnalysisConfigure&#39;)
+  ),
+  &quot;3_Factor_E&quot; = list(
+    visualization = c(&#39;VisFaithful&#39;, &#39;VisSimpleUnderstand&#39;, &#39;VisAppropriate&#39;, &#39;VisSysRetrieveInfo&#39;, &#39;VisRemember&#39;, &#39;VisTrialError&#39;),
+    cognitive     = c(&#39;CogSysThinkDeep&#39;, &#39;CogSysEnjoy&#39;, &#39;CogTaskComplete&#39;),
+    intuitiveness = c(&#39;IntSysSimpleUnderstand&#39;, &#39;IntSysEasyStart&#39;, &#39;IntAnalysisConfigure&#39;)
+  ),
+   &quot;3_Factor_F&quot; = list(
+    visualization = c(&#39;VisFaithful&#39;, &#39;VisSimpleUnderstand&#39;, &#39;VisAppropriate&#39;, &#39;VisSysRetrieveInfo&#39;, &#39;VisRemember&#39;),
+    cognitive     = c(&#39;CogSysThinkDeep&#39;, &#39;CogSysEnjoy&#39;),
     intuitiveness = c(&#39;IntSysSimpleUnderstand&#39;, &#39;IntSysEasyStart&#39;, &#39;IntAnalysisConfigure&#39;)
   ),
   
@@ -889,18 +965,18 @@ for (stim in stimuli_letters) {
 </tr>
 <tr class="even">
 <td align="left">Power BI</td>
-<td align="right">43</td>
+<td align="right">44</td>
 <td align="right">13</td>
 <td align="right">3</td>
 <td align="right">1</td>
-<td align="right">6.086</td>
-<td align="right">1.312</td>
-<td align="right">1.020</td>
-<td align="right">0.826</td>
-<td align="right">0.806</td>
+<td align="right">5.899</td>
+<td align="right">1.289</td>
+<td align="right">1.006</td>
+<td align="right">0.788</td>
+<td align="right">0.903</td>
 <td align="right">0.596</td>
-<td align="right">0.307</td>
-<td align="right">0.422</td>
+<td align="right">0.275</td>
+<td align="right">0.428</td>
 </tr>
 </tbody>
 </table>
@@ -1070,11 +1146,11 @@ saveWorkbook(efa_excel_wb, output_efa_excel, overwrite = TRUE)</code></pre>
 </div>
 <div id="cfa-multi-model-fit-comparison" class="section level2">
 <h2>4. CFA: Multi-Model Fit Comparison</h2>
-<pre class="r"><code># 4.1 Pooled CFA Models
-pooled_cfa_list &lt;- list()
-pooled_rel_list   &lt;- list()
+<pre class="r"><code># 4.1 Pooled CFA Models &amp; Loadings
+pooled_cfa_list      &lt;- list()
+pooled_rel_list      &lt;- list()
+pooled_loadings_list &lt;- list()
 
-# 4.1 Pooled CFA Models &amp; Reliability
 for (m_name in names(cfa_models_list)) {
   m_syntax &lt;- cfa_models_list[[m_name]]
   
@@ -1086,25 +1162,28 @@ for (m_name in names(cfa_models_list)) {
     )
   }, error = function(e) NULL)
   
- label_entry &lt;- paste0(&quot;Pooled_&quot;, m_name) 
+  label_entry &lt;- paste0(&quot;Pooled_&quot;, m_name) 
  
-# Extracting Model Fit
-  pooled_cfa_list[[m_name]] &lt;- extract_fit_measures(fit_pooled, label_entry)
+  # Extract Model Fit
+  pooled_cfa_list[[m_name]]      &lt;- extract_fit_measures(fit_pooled, label_entry)
   
-  # Extracting reliabitlity (Alpha, Omega, AVE)
-  pooled_rel_list[[m_name]] &lt;- extract_reliability(fit_pooled, label_entry)
+  # Extract Reliability (Alpha, Omega, AVE)
+  pooled_rel_list[[m_name]]      &lt;- extract_reliability(fit_pooled, label_entry)
+  
+  # Extract Standardized Loadings (Std.all)
+  pooled_loadings_list[[m_name]] &lt;- extract_cfa_loadings(fit_pooled, label_entry)
 }
 
-pooled_cfa_results &lt;- dplyr::bind_rows(pooled_cfa_list)
-pooled_rel_results &lt;- dplyr::bind_rows(pooled_rel_list)
-
+pooled_cfa_results      &lt;- dplyr::bind_rows(pooled_cfa_list)
+pooled_rel_results      &lt;- dplyr::bind_rows(pooled_rel_list)
+pooled_loadings_results &lt;- dplyr::bind_rows(pooled_loadings_list)
 
 
 # 4.2 Multigroup CFA Models
 multigroup_cfa_list &lt;- list()
 grp_data_clean &lt;- grp_data %&gt;% dplyr::filter(stimulus %in% stimuli_letters) %&gt;% droplevels()  
   
-  for (m_name in names(cfa_models_list)) {
+for (m_name in names(cfa_models_list)) {
   m_syntax &lt;- cfa_models_list[[m_name]]
   
   fit_mg &lt;- tryCatch({
@@ -1121,9 +1200,10 @@ grp_data_clean &lt;- grp_data %&gt;% dplyr::filter(stimulus %in% stimuli_letters
 multigroup_cfa_results &lt;- dplyr::bind_rows(multigroup_cfa_list)
 
 
-# 4.3 Individual Systems CFA Models &amp; Reliability
-individual_cfa_list &lt;- list()
-individual_rel_list &lt;- list()
+# 4.3 Individual Systems CFA Models &amp; Loadings
+individual_cfa_list      &lt;- list()
+individual_rel_list      &lt;- list()
+individual_loadings_list &lt;- list()
 
 for (stim in stimuli_letters) {
   stim_data &lt;- grp_data %&gt;% dplyr::filter(stimulus == stim) %&gt;% droplevels()
@@ -1140,27 +1220,30 @@ for (stim in stimuli_letters) {
     }, error = function(e) NULL)
     
     label_entry &lt;- paste0(stim, &quot;_&quot;, m_name)
-    individual_cfa_list[[label_entry]] &lt;- extract_fit_measures(fit_indiv, label_entry)
-    individual_rel_list[[label_entry]] &lt;- extract_reliability(fit_indiv, label_entry)
+    individual_cfa_list[[label_entry]]      &lt;- extract_fit_measures(fit_indiv, label_entry)
+    individual_rel_list[[label_entry]]      &lt;- extract_reliability(fit_indiv, label_entry)
+    individual_loadings_list[[label_entry]] &lt;- extract_cfa_loadings(fit_indiv, label_entry)
   }
 }
 
-individual_cfa_results &lt;- dplyr::bind_rows(individual_cfa_list)
-individual_rel_results &lt;- dplyr::bind_rows(individual_rel_list)
+individual_cfa_results      &lt;- dplyr::bind_rows(individual_cfa_list)
+individual_rel_results      &lt;- dplyr::bind_rows(individual_rel_list)
+individual_loadings_results &lt;- dplyr::bind_rows(individual_loadings_list)
 
 
-# 4.4 Save Multi-Tab Excel Workbook (Fit + Reliability)
+# 4.4 Save Multi-Tab Excel Workbook (Fit + Reliability + Std.all Loadings)
 cfa_excel_wb &lt;- createWorkbook()
 
 # Fit Tabs
 addWorksheet(cfa_excel_wb, &quot;Pooled_Fit&quot;)
 writeData(cfa_excel_wb, &quot;Pooled_Fit&quot;, pooled_cfa_results)
 
-addWorksheet(cfa_excel_wb, &quot;Pooled_Reliability&quot;)
-writeData(cfa_excel_wb, &quot;Pooled_Reliability&quot;, pooled_rel_results)
-
 addWorksheet(cfa_excel_wb, &quot;Pooled_Reliability_AVE&quot;)
 writeData(cfa_excel_wb, &quot;Pooled_Reliability_AVE&quot;, pooled_rel_results)
+
+# Standardized Loadings Tab (Std.all)
+addWorksheet(cfa_excel_wb, &quot;Pooled_CFA_Loadings&quot;)
+writeData(cfa_excel_wb, &quot;Pooled_CFA_Loadings&quot;, pooled_loadings_results)
 
 addWorksheet(cfa_excel_wb, &quot;Multigroup_Fit&quot;)
 writeData(cfa_excel_wb, &quot;Multigroup_Fit&quot;, multigroup_cfa_results)
@@ -1171,59 +1254,38 @@ writeData(cfa_excel_wb, &quot;By_Stimulus_Fit&quot;, individual_cfa_results)
 addWorksheet(cfa_excel_wb, &quot;By_Stimulus_Reliability&quot;)
 writeData(cfa_excel_wb, &quot;By_Stimulus_Reliability&quot;, individual_rel_results)
 
+addWorksheet(cfa_excel_wb, &quot;By_Stimulus_CFA_Loadings&quot;)
+writeData(cfa_excel_wb, &quot;By_Stimulus_CFA_Loadings&quot;, individual_loadings_results)
+
 output_cfa_excel &lt;- file.path(generated_data_dir, &quot;CFA_Model_Fit_Comparison.xlsx&quot;)
 saveWorkbook(cfa_excel_wb, output_cfa_excel, overwrite = TRUE)
 
-# Preview HTML
-cat(&quot;\n--- Pooled Model Reliability (Preview) ---\n&quot;)</code></pre>
+# Console Preview
+cat(&quot;\n--- Standardized CFA Loadings Preview (Pooled_3_Factor_D) ---\n&quot;)</code></pre>
 <pre><code>## 
-## --- Pooled Model Reliability (Preview) ---</code></pre>
-<pre class="r"><code>print(knitr::kable(pooled_rel_results, digits = 3))</code></pre>
-<pre><code>## 
-## 
-## |Model             |Factor              | alpha| omega|
-## |:-----------------|:-------------------|-----:|-----:|
-## |Pooled_1_Factor   |general_ux          | 0.865| 0.872|
-## |Pooled_2_Factor_A |interface_usability | 0.829| 0.846|
-## |Pooled_2_Factor_A |cognitive_utility   | 0.727| 0.735|
-## |Pooled_2_Factor_B |system_experience   | 0.831| 0.835|
-## |Pooled_2_Factor_B |intuitiveness       | 0.859| 0.861|
-## |Pooled_3_Factor_A |visualization       | 0.769| 0.776|
-## |Pooled_3_Factor_A |cognitive           | 0.727| 0.730|
-## |Pooled_3_Factor_A |intuitiveness       | 0.859| 0.861|
-## |Pooled_3_Factor_B |visualization       | 0.759| 0.765|
-## |Pooled_3_Factor_B |cognitive           | 0.727| 0.728|
-## |Pooled_3_Factor_B |intuitiveness       | 0.859| 0.861|
-## |Pooled_3_Factor_C |visualization       | 0.768| 0.777|
-## |Pooled_3_Factor_C |cognitive           | 0.686| 0.715|
-## |Pooled_3_Factor_C |intuitiveness       | 0.859| 0.861|
-## |Pooled_3_Factor_D |visualization       | 0.758| 0.766|
-## |Pooled_3_Factor_D |cognitive           | 0.686| 0.715|
-## |Pooled_3_Factor_D |intuitiveness       | 0.859| 0.861|
-## |Pooled_4_Factor_A |vis_clarity         | 0.632| 0.646|
-## |Pooled_4_Factor_A |sys_retrieval       | 0.616| 0.625|
-## |Pooled_4_Factor_A |cognitive           | 0.727| 0.730|
-## |Pooled_4_Factor_A |intuitiveness       | 0.859| 0.861|
-## |Pooled_4_Factor_B |visualization       | 0.758| 0.765|
-## |Pooled_4_Factor_B |task                | 0.489| 0.494|
-## |Pooled_4_Factor_B |cognitive           | 0.686| 0.709|
-## |Pooled_4_Factor_B |intuitiveness       | 0.859| 0.861|</code></pre>
-<pre class="r"><code>print(knitr::kable(pooled_cfa_results, digits = 3, caption = &quot;CFA Fit Indices (Pooled Data Preview)&quot;))</code></pre>
+## --- Standardized CFA Loadings Preview (Pooled_3_Factor_D) ---</code></pre>
+<pre class="r"><code>print(knitr::kable(
+  pooled_loadings_results %&gt;% dplyr::filter(Model == &quot;Pooled_3_Factor_D&quot;),
+  digits = 3,
+  caption = &quot;Standardized Loadings (Std.all) for 3_Factor_D&quot;
+))</code></pre>
 <pre><code>## 
 ## 
-## Table: CFA Fit Indices (Pooled Data Preview)
+## Table: Standardized Loadings (Std.all) for 3_Factor_D
 ## 
-## |Model             |   chisq| df| pvalue|   cfi|   tli| rmsea| rmsea.ci.lower| rmsea.ci.upper|  srmr|      aic|      bic|
-## |:-----------------|-------:|--:|------:|-----:|-----:|-----:|--------------:|--------------:|-----:|--------:|--------:|
-## |Pooled_1_Factor   | 355.794| 65|      0| 0.726| 0.671| 0.141|          0.127|          0.155| 0.087| 6884.515| 7017.916|
-## |Pooled_2_Factor_A | 316.249| 64|      0| 0.762| 0.710| 0.132|          0.118|          0.147| 0.088| 6846.970| 6983.791|
-## |Pooled_2_Factor_B | 198.137| 64|      0| 0.873| 0.846| 0.096|          0.081|          0.112| 0.066| 6728.857| 6865.679|
-## |Pooled_3_Factor_A | 168.141| 62|      0| 0.900| 0.874| 0.087|          0.071|          0.103| 0.061| 6702.861| 6846.524|
-## |Pooled_3_Factor_B | 150.306| 51|      0| 0.900| 0.870| 0.093|          0.076|          0.110| 0.062| 6104.365| 6237.766|
-## |Pooled_3_Factor_C | 138.592| 51|      0| 0.908| 0.881| 0.087|          0.070|          0.105| 0.060| 6262.990| 6396.391|
-## |Pooled_3_Factor_D | 121.341| 41|      0| 0.909| 0.877| 0.093|          0.074|          0.112| 0.062| 5663.886| 5787.026|
-## |Pooled_4_Factor_A | 167.593| 59|      0| 0.898| 0.865| 0.090|          0.074|          0.106| 0.060| 6708.314| 6862.238|
-## |Pooled_4_Factor_B | 157.411| 59|      0| 0.907| 0.877| 0.086|          0.070|          0.102| 0.059| 6698.132| 6852.056|</code></pre>
+## |Model             |Factor        |Item                   | Std_all| R_Squared|    SE| Z_Value| P_Value| CI_Lower| CI_Upper|
+## |:-----------------|:-------------|:----------------------|-------:|---------:|-----:|-------:|-------:|--------:|--------:|
+## |Pooled_3_Factor_D |visualization |VisFaithful            |   0.558|     0.312| 0.057|   9.726|       0|    0.446|    0.671|
+## |Pooled_3_Factor_D |visualization |VisSimpleUnderstand    |   0.667|     0.444| 0.049|  13.614|       0|    0.571|    0.763|
+## |Pooled_3_Factor_D |visualization |VisAppropriate         |   0.583|     0.340| 0.055|  10.661|       0|    0.476|    0.690|
+## |Pooled_3_Factor_D |visualization |VisSysRetrieveInfo     |   0.632|     0.399| 0.051|  12.282|       0|    0.531|    0.733|
+## |Pooled_3_Factor_D |visualization |VisRemember            |   0.679|     0.461| 0.048|  14.163|       0|    0.585|    0.773|
+## |Pooled_3_Factor_D |cognitive     |CogSysThinkDeep        |   0.629|     0.396| 0.052|  11.983|       0|    0.526|    0.732|
+## |Pooled_3_Factor_D |cognitive     |CogSysUseful           |   0.574|     0.330| 0.059|   9.796|       0|    0.459|    0.689|
+## |Pooled_3_Factor_D |cognitive     |CogSysEnjoy            |   0.798|     0.638| 0.050|  15.915|       0|    0.700|    0.897|
+## |Pooled_3_Factor_D |intuitiveness |IntSysSimpleUnderstand |   0.854|     0.729| 0.028|  31.005|       0|    0.800|    0.908|
+## |Pooled_3_Factor_D |intuitiveness |IntSysEasyStart        |   0.840|     0.706| 0.028|  29.767|       0|    0.785|    0.896|
+## |Pooled_3_Factor_D |intuitiveness |IntAnalysisConfigure   |   0.766|     0.587| 0.034|  22.339|       0|    0.699|    0.833|</code></pre>
 </div>
 
 
